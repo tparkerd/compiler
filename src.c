@@ -20,19 +20,28 @@ typedef struct token {
     char name[20];
 } token ;
 
-struct token* reservedWords;
 
+// Debug functions
+// Defines which words are reserved
+void initReservedWords();
+// Helper function to determine if an identifier is actually a reserved word
+void isReservedWord(char* word);
+// Reads in the input file
+void readRawFile();
+// Removes comments from input file, output cleaninput.txt
+void deleteComments();
+// Removes all non-printable characters
+void removeWhiteSpace();
+// Process the lexeme table
+void createLexemeTable();
+
+
+// Global variables
+struct token* reservedWords;
 char rawInput[MAX_FILE_LENGTH];
 char cleanInput[MAX_FILE_LENGTH];
 char textInput[MAX_FILE_LENGTH];
 
-// Debug functions
-void initReservedWords();
-void readRawFile();
-void deleteComments();
-void removeWhiteSpace();
-void process();
-int lookUpWord(char* word);
 
 int main() {
 
@@ -40,7 +49,7 @@ int main() {
   readRawFile();
   deleteComments();
   removeWhiteSpace();
-  process();
+  createLexemeTable();
 
 
   return 0;
@@ -48,7 +57,7 @@ int main() {
 
 void initReservedWords() {
     // Allocate space for a list of reserved words
-    struct token* rWordList = malloc(20 * sizeof(struct token));
+    struct token* rWordList = (struct token*)malloc(20 * sizeof(struct token));
 
     // Const
     rWordList[0].id = 28;
@@ -185,23 +194,22 @@ void removeWhiteSpace() {
   printf("\n");
 }
 
-void process()
+void createLexemeTable()
 {
-    // Initialize the first token
+    // Initialize the first token as the first character in the input
     int token = (int)cleanInput[0];
 
     // Test each individual character to see what it does!
-    // *P*osition
-    int i, p;
+    int i;
     // 11 is the maximum size of a variable name
-    char* tmp = calloc(12, sizeof(char));
+    char* tmp = (char*)calloc(12, sizeof(char));
     // Run down the entire array for clean input
     for ( i = 0; i < MAX_FILE_LENGTH; i++ )
     {
         // Found a letter
         if ( 65 >= cleanInput[i] && 122 <= cleanInput[i] )
         {
-            
+
         }
     }
 
@@ -209,8 +217,7 @@ void process()
 }
 
 
-int lookUpWord(char* word)
+void isReservedWord(char* word)
 {
 
-    return -1;
 }
