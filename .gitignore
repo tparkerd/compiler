@@ -1,0 +1,5 @@
+/output
+/input
+*.out
+*.exe
+cleaninput.txt

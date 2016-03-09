@@ -1,0 +1,28 @@
+/* This program computes the summation of natural numbers up to and including n by
+	1. A loop
+	2. The famous n(n+1)/2 formula.
+*/
+
+const loop_end=0;
+var i, n, s;
+
+begin
+
+	read n;  /* Another comment */
+
+	s:= n*(n+1)/2;
+	write s;
+
+	s:=0;
+	i:=n;
+
+	while i>0 do
+	begin
+		s:= s+ i;
+
+		i:= i-1;
+	end;
+
+	write s;
+
+end.
