@@ -8,9 +8,9 @@ var i, n, s;
 
 begin
 
-	read n;  /* Another comment */
+	read 6n;  /* Another comment */
 
-	s:= n*(n+1)/2;
+	s:= n*(n+1)/123456;
 	write s;
 
 	s:=0;

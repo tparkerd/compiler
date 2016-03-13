@@ -1,1 +1,1 @@
-# lex
+# lexical analyzer
