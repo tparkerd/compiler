@@ -3,3 +3,7 @@
 *.out
 *.exe
 cleaninput.txt
+/backup
+/draft
+lexemelist.txt
+lexemetable.txt
