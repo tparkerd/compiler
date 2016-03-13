@@ -75,7 +75,6 @@ void initDigits();
 void initReservedWords();
 void initSpecialSymbols();
 void initTokenStorage();
-void initErrorCodes();
 
 // Reads raw input file, deletes comments, and removes whitespace
 void read();
@@ -108,7 +107,6 @@ void init() {
   initReservedWords();
   initSpecialSymbols();
   initTokenStorage();
-  initErrorCodes();
 }
 
 void initReservedWords() {
