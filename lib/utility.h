@@ -27,7 +27,9 @@
 #define NUM_RESERVED_WORDS 14
 #define NUM_SPECIAL_SYMBOLS 16
 #define INVALID_NUM 100000
+
 // Errors
+#define NUM_ERROR_TYPES 30
 #define MAX_VARIABLE_LENGTH 11
 #define ERROR_EXCEED_MAX_DIGITS 999999
 
@@ -73,6 +75,7 @@ void initDigits();
 void initReservedWords();
 void initSpecialSymbols();
 void initTokenStorage();
+void initErrorCodes();
 
 // Reads raw input file, deletes comments, and removes whitespace
 void read();
@@ -96,6 +99,7 @@ int isDigit(int inputPosition, int length, int total);
 // Helper functions for readability and common use
 int isWhiteSpace(char c);
 int getLength(char* string);
+const char* getErrorMessage(int id);
 
 // Functions
 
@@ -104,6 +108,7 @@ void init() {
   initReservedWords();
   initSpecialSymbols();
   initTokenStorage();
+  initErrorCodes();
 }
 
 void initReservedWords() {
@@ -311,10 +316,143 @@ void initTokenStorage() {
     }
 }
 
+const char* getErrorMessage(int id) {
+  switch (id)
+  {
+    // No error - should *not* need this, but just in case
+    case 0:
+      return "";
+
+    // Assigned a value to a variable using =.
+    case 1:
+      return "Use = instead of :=.";
+
+    // Syntax error near constant declarations or in a conditional expression
+    case 2:
+      return "= must be followed by a number.";
+
+    // Syntax error near constant declarations.
+    case 3:
+      return "Identifier must be followed by =.";
+
+    // Syntax error near constant, variable, or procedure declarations.
+    case 4:
+      return "const, int, procedure must be followed by identifier.";
+
+    // You missed a semicolon or a comma somewhere. Also check that you aren’t
+    // adding extra semicolons to if-then-else and while-do’s.
+    case 5:
+      return "Semicolon or comma missing.";
+
+    // Not used
+    case 6:
+      return "";
+
+    // Not used
+    case 7:
+      return "";
+
+    // Not used
+    case 8:
+      return "";
+
+    // Missing a period at the end of the program.
+    case 9:
+      return "Period missing.";
+
+    // Except for the last one in a block, every statement needs to end with a semicolon.
+    case 10:
+      return "Semicolon between statements missing.";
+
+    // You tried to use an undeclared constant, variable, or procedure, or you tried to
+    // access something that is outside of your scope.
+    case 11:
+      return "Undeclared identifier.";
+
+    // You tried to assign a value to a constant or a procedure. Check your variable names.
+    case 12:
+      return "Assignment to constant or procedure is not allowed.";
+
+    // You began a statement with an identifier,   but it wasn’t followed by an assignment
+    // operator (:=).
+    case 13:
+      return "Assignment operator expected.";
+
+    // You used call, but you didn’t include the procedure name.
+    case 14:
+      return "Call must be followed by an identifier.";
+
+    // You tried to call a constant or a variable, which is meaningless.
+    case 15:
+      return "Call of a constant or variable is meaningless.";
+
+    // if [condition] must be followed by then [statement].
+    case 16:
+      return "then expected.";
+
+    // Not used
+    case 17:
+      return "";
+
+    // while [condition] must be followed by do [statement].
+    case 18:
+      return "do expected.";
+
+    // Not used
+    case 19:
+      return "";
+
+    // In a conditional expression, you are missing a relational operator.
+    case 20:
+      return "Relational operator expected.";
+
+    // You cannot use procedures in expressions (since they do not return or represent
+    // values).
+    case 21:
+      return "Expression must not contain a procedure identifier.";
+
+    // Missing the right parenthesis at the end of a factor.
+    case 22:
+      return "Right parenthesis missing.";
+
+    // There is something wrong with a factor used in an expression.
+    case 23:
+      return "The preceding factor cannot begin with this symbol.";
+
+    // Not used
+    case 24:
+      return "";
+
+    // Code generator exceeded the maximum number of lines of code.
+    case 25:
+      return "This number is too large.";
+
+    // You used out, but didn’t specify anything to output.
+    case 26:
+      return "out must be followed by an expression.";
+
+    // You used in, but you didn’t specify what variable to assign it to.
+    case 27:
+      return "in must be followed by an identifier.";
+
+    // Not used
+    case 28:
+      return "";
+
+    // Constants cannot be redefined.
+    case 29:
+      return "Cannot redefine constants.";
+
+    // Unknown error thrown
+    default:
+      return "";
+  }
+}
+
 void read() {
-    readRawFile();
-    deleteComments();
-    // removeWhiteSpace();
+  readRawFile();
+  deleteComments();
+  // removeWhiteSpace();
 }
 
 void readRawFile() {
