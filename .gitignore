@@ -7,3 +7,4 @@ cleaninput.txt
 /draft
 lexemelist.txt
 lexemetable.txt
+*.gch
