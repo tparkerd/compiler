@@ -29,7 +29,7 @@
 #define INVALID_NUM 100000
 
 // Errors
-#define NUM_ERROR_TYPES 30
+#define NUM_ERROR_TYPES 32
 #define MAX_VARIABLE_LENGTH 11
 #define ERROR_EXCEED_MAX_DIGITS 999999
 
@@ -441,6 +441,14 @@ const char* getErrorMessage(int id) {
     case 29:
       return "Cannot redefine constants.";
 
+    // Identifier exceed 11 characters in length
+    case 30:
+      return "Identifier's name is too long.";
+
+    // Identifier starts with a number
+    case 31:
+      return "Variable does not start with letter.";
+
     // Unknown error thrown
     default:
       return "";
@@ -547,22 +555,19 @@ struct token* isReservedWord(struct token* t, int inputPosition) {
   }
 
   // Valid token was found, set its values
-  t->id = value;
-
-  // Get the name of the reserved word
   int i;
   for ( i = 0; i < NUM_RESERVED_WORDS; i++ )
   {
     // If the reserved word is found, copy its name over to the struct token
     if ( reservedWords[i].id == value )
     {
+      t->id = reservedWords[i].id;
       strcpy(t->name, reservedWords[i].name);
       t->type = reservedWords[i].type;
     }
   }
 
-  // Otherwise return the address of the struct that contains all the data about
-  // the valid token
+  // Return the token with all its known values
   return t;
 }
 
@@ -606,8 +611,8 @@ struct token* isNumber(struct token* t, int inputPosition) {
   // is empty, the first digit will replace the string.
   int value = isDigit(inputPosition, 0, INVALID_NUM);
 
-  // If the token was not a valid number word, return the placeholder token
-  // with type NULL
+  // If the token was not a valid number, return the placeholder token
+  // with a nulsym type
   if ( value == INVALID_NUM )
   {
     t->type = nulsym;
@@ -628,15 +633,23 @@ struct token* isNumber(struct token* t, int inputPosition) {
   //     (dest,format,value)
   sprintf(t->name, "%d", value);
 
+
+  if ( error == 25 )
+    printf("%s\n", getErrorMessage(error));
+
   // Otherwise return the address of the struct that contains all the data about
   // the valid token
   return t;
 }
 
 int isDigit(int inputPosition, int length, int total) {
-  /*// Numbers cannot exceed five digits in length
-  if ( length > 5 )
-    return INVALID_NUM;*/
+  if (length > 5)
+    error = 25;
+
+  // THIS MAY NEED TO CHANGE. I still don't know how to throw an identifier that
+  // starts with a number, and still have the entire "identifier" consumed
+  if ( length > 0 && (cleanInput[inputPosition] >= 48 && cleanInput[inputPosition] <= 57) )
+    error = 31;
 
   // If it's not a number, return the value that's already known
   if ( !(cleanInput[inputPosition] >= 48 && cleanInput[inputPosition] <= 57) )
@@ -747,6 +760,9 @@ struct token* isIdentifier(struct token* t, int inputPosition) {
     return t;
   }
 
+  if ( getLength(string) > MAX_VARIABLE_LENGTH )
+    error = 30;
+
   // Valid token was found, set its values
   // All identifiers have a token type of two
   t->id = 2;
@@ -770,13 +786,9 @@ char* isId(int inputPosition, char* string, int length) {
   // Affix the next letter to the string
   string[length] = cleanInput[inputPosition];
 
-    // Length of string exceeds the max length allotted to identifiers
-    if (length > MAX_VARIABLE_LENGTH)
-      return (char*)"";
-
   // If the string doesn't start with a letter or underscore, return false
   // *only check when the string has one character
-  if ( length == 1 )
+  if ( length == 0 )
     // A - Z || a - z || underscore
     if ( !((string[0] >= 65 && string[0] <= 90) || ( string[0] >= 97 && string[0] <= 122) || (string[0] == 95)) )
       return (char*)"";

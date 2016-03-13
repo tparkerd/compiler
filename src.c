@@ -2,19 +2,22 @@
 
 
 int main() {
-    printf("Initialize data: ");
-    init();
-    // printf("DONE\n");
-    printf("Read file contents: ");
-    read();
-    printf(ANSI_COLOR_CYAN"DONE\n"ANSI_COLOR_RESET);
-    printf(ANSI_COLOR_CYAN"Scanning input: \n"ANSI_COLOR_RESET);
-    scan();
-    printf(ANSI_COLOR_CYAN"DONE\n"ANSI_COLOR_RESET);
-    writeLexemeTable();
-    writeLexemeList();
-    return 0;
+  printf("Initialize data: ");
+  init();
+  printf("done\n\n");
+  printf("Read file contents: ");
+  read();
+  printf("done\n\n");
+  printf("Scanning input\n__________________________\n");
+  scan();
+  printf("__________________________\n\n");
+
+  printf("Lexeme Table\n__________________________\n");
+  writeLexemeTable();
+  writeLexemeList();
+  return 0;
 }
+
 
 
 void scan() {
@@ -23,6 +26,7 @@ void scan() {
   {
     if ( !isWhiteSpace(cleanInput[counter]) )
     {
+      error = 0;
       // printf("Check: %c\n", cleanInput[counter]);
       // Assume it is an invalid token type
       struct token* t = (struct token*)malloc(sizeof(struct token));
@@ -31,6 +35,16 @@ void scan() {
       if ( t->type != nulsym )
       {
         printf(ANSI_COLOR_GREEN"%s\n"ANSI_COLOR_RESET, t->name);
+        tokenStorage[tokenCount++] = *t;
+        counter += getLength(t->name) - 1;
+        free(t);
+        continue;
+      }
+
+      t = isIdentifier(t, counter);
+      if ( t->type != nulsym )
+      {
+        printf(ANSI_COLOR_CYAN"%s\n"ANSI_COLOR_RESET, t->name);
         tokenStorage[tokenCount++] = *t;
         counter += getLength(t->name) - 1;
         free(t);
@@ -57,15 +71,6 @@ void scan() {
         continue;
       }
 
-      t = isIdentifier(t, counter);
-      if ( t->type != nulsym )
-      {
-        printf(ANSI_COLOR_CYAN"%s\n"ANSI_COLOR_RESET, t->name);
-        tokenStorage[tokenCount++] = *t;
-        counter += getLength(t->name) - 1;
-        free(t);
-        continue;
-      }
 
     }
   }
