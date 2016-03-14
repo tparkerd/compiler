@@ -85,13 +85,13 @@ void writeLexemeList();
 
 // Scan to understand the code (previously known as covertascii)
 void scan();
-struct token* isIdentifier(struct token* t, int inputPosition);
+void isIdentifier(struct token* t, int inputPosition);
 char* isId(int inputPosition, char* string, int length);
-struct token* isReservedWord(struct token* t, int inputPosition);
+void isReservedWord(struct token* t, int inputPosition);
 int isReserved(int inputPosition, char* string, int length);
-struct token* isSpecialSymbol(struct token* t, int inputPosition);
+void isSpecialSymbol(struct token* t, int inputPosition);
 int isSpecial(int inputPosition, char* string, int length);
-struct token* isNumber(struct token* t, int inputPosition);
+void isNumber(struct token* t, int inputPosition);
 int isDigit(int inputPosition, int length, int total);
 
 // Helper functions for readability and common use
@@ -564,14 +564,6 @@ void scan() {
       // Assume it is an invalid token type
       struct token* t = (struct token*)malloc(sizeof(struct token));
 
-      // I'm probably going to want to change this later one so that
-      // the isReserved and like functions do not return anything and are
-      // void. They are taking in a pointer to the token (t), and returning
-      // a pointer to the exact same location in memory. It's kind of pointless.
-      // It shouldn't affect any changes you make, since token (t) will still
-      // be available. It will be have a line like:
-      // isReserved(t, counter);
-      // instead of the following:
       isReservedWord(t, counter);
       if ( t->type != nulsym )
       {
@@ -615,7 +607,7 @@ void scan() {
   }
 }
 
-struct token* isReservedWord(struct token* t, int inputPosition) {
+void isReservedWord(struct token* t, int inputPosition) {
   // Create a temporary string to test the current possible token
   char string[20];
   // Initialize the tempString to be empty
@@ -629,7 +621,7 @@ struct token* isReservedWord(struct token* t, int inputPosition) {
   if ( value == 0 )
   {
     t->type = nulsym;
-    return t;
+    return;
   }
 
   // Valid token was found, set its values
@@ -646,7 +638,7 @@ struct token* isReservedWord(struct token* t, int inputPosition) {
   }
 
   // Return the token with all its known values
-  return t;
+  return;
 }
 
 int isReserved(int inputPosition, char* string, int length) {
@@ -683,7 +675,7 @@ int isReserved(int inputPosition, char* string, int length) {
   return isReserved(inputPosition + 1, string, length + 1);
 }
 
-struct token* isNumber(struct token* t, int inputPosition) {
+void isNumber(struct token* t, int inputPosition) {
   // Get the return value of the check if it is a reserved word
   // Also, assume that the number is invalid, so if the string
   // is empty, the first digit will replace the string.
@@ -698,7 +690,7 @@ struct token* isNumber(struct token* t, int inputPosition) {
   if ( value == INVALID_NUM )
   {
     t->type = nulsym;
-    return t;
+    return;
   }
 
   // Valid token was found, set its values
@@ -717,7 +709,7 @@ struct token* isNumber(struct token* t, int inputPosition) {
 
   // Otherwise return the address of the struct that contains all the data about
   // the valid token
-  return t;
+  return;
 }
 
 int isDigit(int inputPosition, int length, int total) {
@@ -747,7 +739,7 @@ int isDigit(int inputPosition, int length, int total) {
   return isDigit(inputPosition + 1, length + 1, total);
 }
 
-struct token* isSpecialSymbol(struct token* t, int inputPosition) {
+void isSpecialSymbol(struct token* t, int inputPosition) {
   // Create a temporary string to test the current possible token
   char string[20];
   // Initialize the tempString to be empty
@@ -761,7 +753,7 @@ struct token* isSpecialSymbol(struct token* t, int inputPosition) {
   if ( value == 0 )
   {
     t->type = nulsym;
-    return t;
+    return;
   }
 
   // Valid token was found, set its values
@@ -781,7 +773,7 @@ struct token* isSpecialSymbol(struct token* t, int inputPosition) {
 
   // Otherwise return the address of the struct that contains all the data about
   // the valid token
-  return t;
+  return;
 }
 
 int isSpecial(int inputPosition, char* string, int length) {
@@ -818,7 +810,7 @@ int isSpecial(int inputPosition, char* string, int length) {
   return isSpecial(inputPosition + 1, string, length + 1);
 }
 
-struct token* isIdentifier(struct token* t, int inputPosition) {
+void isIdentifier(struct token* t, int inputPosition) {
   // Create a temporary string to test the current possible token
   char string[20];
   // Initialize the tempString to be empty
@@ -831,7 +823,7 @@ struct token* isIdentifier(struct token* t, int inputPosition) {
   if ( strcmp(value, "") == 0 )
   {
     t->type = nulsym;
-    return t;
+    return;
   }
 
   // Valid token was found, set its values
@@ -852,7 +844,7 @@ struct token* isIdentifier(struct token* t, int inputPosition) {
 
   // Otherwise return the address of the struct that contains all the data about
   // the valid token
-  return t;
+  return;
 }
 
 char* isId(int inputPosition, char* string, int length) {
