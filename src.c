@@ -18,8 +18,6 @@ int main() {
   return 0;
 }
 
-
-
 void scan() {
   // For each character in the input array (cleaninput.txt)
   for( counter = 0; counter < MAX_FILE_LENGTH - 1; counter++ )
@@ -44,7 +42,11 @@ void scan() {
       t = isIdentifier(t, counter);
       if ( t->type != nulsym )
       {
-        printf(ANSI_COLOR_CYAN"%s\n"ANSI_COLOR_RESET, t->name);
+        if ( t->type == numbersym )
+          printf(ANSI_COLOR_REDP"%s\n"ANSI_COLOR_RESET, t->name);
+        else if (t->type == identsym )
+          printf(ANSI_COLOR_CYAN"%s\n"ANSI_COLOR_RESET, t->name);
+
         tokenStorage[tokenCount++] = *t;
         counter += getLength(t->name) - 1;
         free(t);

@@ -1,6 +1,3 @@
-#ifndef UTILITY_H
-#define UTILITY_H
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -65,8 +62,10 @@ token tokenStorage[MAX_FILE_LENGTH];
 
 // Counter to move along the input file's contents, character by character
 int counter;
-int tokenCount = 0;
-int error = 0;
+// Number of known tokens
+int tokenCount;
+// Global flag for error handling
+int error;
 
 // Function Prototypes
 // Initialize data: known digits, reserved words, and symbols
@@ -99,6 +98,15 @@ int isDigit(int inputPosition, int length, int total);
 int isWhiteSpace(char c);
 int getLength(char* string);
 const char* getErrorMessage(int id);
+
+int main() {
+  init();
+  read();
+  scan();
+  writeLexemeTable();
+  writeLexemeList();
+  return 0;
+}
 
 // Functions
 
@@ -315,6 +323,12 @@ void initTokenStorage() {
 }
 
 const char* getErrorMessage(int id) {
+  /*  Only one or two of these would used, but I was bored, so
+   *  I listed all the ones I found in a PL/0 manual I found.
+   *  I was thinking about using a global error flag that would
+   *  track when one of the isReserved, isIdentifier, isNumber,
+   *  or isSpecialSymbol came across an error.
+   */
   switch (id)
   {
     // No error - should *not* need this, but just in case
@@ -537,6 +551,69 @@ void removeWhiteSpace() {
     printf("\n");
 }
 
+void scan() {
+  // Start with an empty token list
+  tokenCount = 0;
+  // For each character in the input array (cleaninput.txt)
+  for( counter = 0; counter < MAX_FILE_LENGTH - 1; counter++ )
+  {
+    if ( !isWhiteSpace(cleanInput[counter]) )
+    {
+      // printf("Check: %c\n", cleanInput[counter]);
+      // Assume it is an invalid token type
+      struct token* t = (struct token*)malloc(sizeof(struct token));
+
+      // I'm probably going to want to change this later one so that
+      // the isReserved and like functions do not return anything and are
+      // void. They are taking in a pointer to the token (t), and returning
+      // a pointer to the exact same location in memory. It's kind of pointless.
+      // It shouldn't affect any changes you make, since token (t) will still
+      // be available. It will be have a line like:
+      // isReserved(t, counter);
+      // instead of the following:
+      t = isReservedWord(t, counter);
+      if ( t->type != nulsym )
+      {
+        printf(ANSI_COLOR_GREEN"%s\n"ANSI_COLOR_RESET, t->name);
+        tokenStorage[tokenCount++] = *t;
+        counter += getLength(t->name) - 1;
+        free(t);
+        continue;
+      }
+
+      t = isSpecialSymbol(t, counter);
+      if ( t->type != nulsym )
+      {
+        printf(ANSI_COLOR_YELLOW"%s\n"ANSI_COLOR_RESET, t->name);
+        tokenStorage[tokenCount++] = *t;
+        counter += getLength(t->name) - 1;
+        free(t);
+        continue;
+      }
+
+      t = isNumber(t, counter);
+      if ( t->type != nulsym)
+      {
+        printf(ANSI_COLOR_PURPLE"%s\n"ANSI_COLOR_RESET, t->name);
+        tokenStorage[tokenCount++] = *t;
+        counter += getLength(t->name) - 1;
+        free(t);
+        continue;
+      }
+
+      t = isIdentifier(t, counter);
+      if ( t->type != nulsym )
+      {
+        printf(ANSI_COLOR_REDP"%s\n"ANSI_COLOR_RESET, t->name);
+        tokenStorage[tokenCount++] = *t;
+        counter += getLength(t->name) - 1;
+        free(t);
+        continue;
+      }
+    }
+  }
+}
+
 struct token* isReservedWord(struct token* t, int inputPosition) {
   // Create a temporary string to test the current possible token
   char string[20];
@@ -633,10 +710,6 @@ struct token* isNumber(struct token* t, int inputPosition) {
   //     (dest,format,value)
   sprintf(t->name, "%d", value);
 
-  //
-  // if ( error == 25 )
-  //   printf("%s\n", getErrorMessage(error));
-
   // Otherwise return the address of the struct that contains all the data about
   // the valid token
   return t;
@@ -710,13 +783,13 @@ int isSpecial(int inputPosition, char* string, int length) {
   // Length of string exceeds the max length of all known reserved words
   // or is an empty string, return false, as it is not a reserved word.
   if (length > 2)
-  return 0;
+    return 0;
 
   // Affix the next letter to the string
   string[length] = cleanInput[inputPosition];
 
   // If the string doesn't start with a special character, return false
-  // *only check when the string has one character
+  // *only check when the string has one character -- not necessary though
   if ( length == 0 )
     // ( ) * + ,  - . / OR : ; < = >
     if ( !( (string[0] >= 40 && string[0] <= 47) || ( string[0] >= 58 && string[0] <= 62) ) )
@@ -757,21 +830,6 @@ struct token* isIdentifier(struct token* t, int inputPosition) {
     return t;
   }
 
-  // Identifier exceeds allowable length
-  if ( getLength(string) > MAX_VARIABLE_LENGTH )
-    error = 30;
-
-  // Identifier starts with number
-  if ( t->name[0] >= 48 && t->name[0]  <= 57 )
-    error = 31;
-
-  // If the identifier is actually a number
-  if ( isNumber(t, inputPosition)->type != nulsym )
-    return isNumber(t, inputPosition);
-
-  if (error != 0)
-    printf("%s\n", getErrorMessage(error));
-
   // Valid token was found, set its values
   // All identifiers have a token type of two
   t->id = 2;
@@ -792,9 +850,11 @@ char* isId(int inputPosition, char* string, int length) {
   string[length] = cleanInput[inputPosition];
 
   // If the string doesn't start with a letter or underscore, mark it as an invalid identifier
+  // *** I have a funny feelign this is where we need to throw an error for an id starting
+  // *** with something other than a letter
   // A - Z || a - z || underscore
   if ( !((string[0] >= 65 && string[0] <= 90) || ( string[0] >= 97 && string[0] <= 122)) )
-    error = 31;
+    return string;
 
   // If the current letter is not a letter, underscore, or number, we've reached the
   // end of the possible identifier.
@@ -838,7 +898,6 @@ void writeLexemeTable() {
     {
         if ( strcmp(tokenStorage[i].name, "") == 0 )
             continue;
-        printf("%-15s\t%-d\n", tokenStorage[i].name, tokenStorage[i].id);
         fprintf(lexemeTable, "%-15s\t%-d\n", tokenStorage[i].name, tokenStorage[i].id);
     }
     fclose(lexemeTable);
@@ -867,5 +926,3 @@ int isWhiteSpace(char c) {
         return 1;
     return 0;
 }
-
-#endif
