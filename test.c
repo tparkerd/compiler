@@ -81,7 +81,6 @@ void readRawFile();
 void deleteComments();
 void removeWhiteSpace();
 void writeLexemeTable();
-printf("THING %d\n", atoi(tokenStorage[3]));
 void writeLexemeList();
 
 // Scan to understand the code (previously known as covertascii)
@@ -573,7 +572,7 @@ void scan() {
       // be available. It will be have a line like:
       // isReserved(t, counter);
       // instead of the following:
-      t = isReservedWord(t, counter);
+      isReservedWord(t, counter);
       if ( t->type != nulsym )
       {
         printf(ANSI_COLOR_GREEN"%s\n"ANSI_COLOR_RESET, t->name);
@@ -583,7 +582,7 @@ void scan() {
         continue;
       }
 
-      t = isSpecialSymbol(t, counter);
+      isSpecialSymbol(t, counter);
       if ( t->type != nulsym )
       {
         printf(ANSI_COLOR_YELLOW"%s\n"ANSI_COLOR_RESET, t->name);
@@ -593,7 +592,7 @@ void scan() {
         continue;
       }
 
-      t = isNumber(t, counter);
+      isNumber(t, counter);
       if ( t->type != nulsym)
       {
         printf(ANSI_COLOR_PURPLE"%s\n"ANSI_COLOR_RESET, t->name);
@@ -603,7 +602,7 @@ void scan() {
         continue;
       }
 
-      t = isIdentifier(t, counter);
+      isIdentifier(t, counter);
       if ( t->type != nulsym )
       {
         printf(ANSI_COLOR_REDP"%s\n"ANSI_COLOR_RESET, t->name);
