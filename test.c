@@ -81,6 +81,7 @@ void readRawFile();
 void deleteComments();
 void removeWhiteSpace();
 void writeLexemeTable();
+printf("THING %d\n", atoi(tokenStorage[3]));
 void writeLexemeList();
 
 // Scan to understand the code (previously known as covertascii)
@@ -559,6 +560,7 @@ void scan() {
   {
     if ( !isWhiteSpace(cleanInput[counter]) )
     {
+      error = 0;
       // printf("Check: %c\n", cleanInput[counter]);
       // Assume it is an invalid token type
       struct token* t = (struct token*)malloc(sizeof(struct token));
@@ -687,6 +689,10 @@ struct token* isNumber(struct token* t, int inputPosition) {
   // Also, assume that the number is invalid, so if the string
   // is empty, the first digit will replace the string.
   int value = isDigit(inputPosition, 0, INVALID_NUM);
+
+  if ( error )
+    printf("%s\n", getErrorMessage(error));
+
 
   // If the token was not a valid number, return the placeholder token
   // with a nulsym type
@@ -822,8 +828,7 @@ struct token* isIdentifier(struct token* t, int inputPosition) {
   // Get the return value of the check if it is a reserved word
   char* value = isId(inputPosition, string, 0);
 
-  // If the token was not a valid reserved word, return null (false condition for
-  // the scan() function.)
+  // If the token was not a valid idenfier, return a null sym
   if ( strcmp(value, "") == 0 )
   {
     t->type = nulsym;
@@ -840,6 +845,12 @@ struct token* isIdentifier(struct token* t, int inputPosition) {
   // Set the name to the identifier's value
   strcpy(t->name, value);
 
+  int tmp = isDigit(inputPosition, 0, 0);
+  char temp[20];
+  sprintf(temp, "%d", tmp);
+  if (getLength(t->name) > getLength(temp) )
+    printf("%s == %s\n", t->name, temp);
+
   // Otherwise return the address of the struct that contains all the data about
   // the valid token
   return t;
@@ -855,6 +866,8 @@ char* isId(int inputPosition, char* string, int length) {
   // A - Z || a - z || underscore
   if ( !((string[0] >= 65 && string[0] <= 90) || ( string[0] >= 97 && string[0] <= 122)) )
     return string;
+  // else if( (string[0] >= 48 && string[0] <=57) )
+  //   exit();
 
   // If the current letter is not a letter, underscore, or number, we've reached the
   // end of the possible identifier.
