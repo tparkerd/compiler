@@ -331,137 +331,21 @@ const char* getErrorMessage(int id) {
    */
   switch (id)
   {
-    // No error - should *not* need this, but just in case
+    // Identifier starts with a number
     case 0:
-      return "";
+      return "Variable does not start with letter.";
 
-    // Assigned a value to a variable using =.
+    // Number exceeds five digits
     case 1:
-      return "Use = instead of :=.";
-
-    // Syntax error near constant declarations or in a conditional expression
-    case 2:
-      return "= must be followed by a number.";
-
-    // Syntax error near constant declarations.
-    case 3:
-      return "Identifier must be followed by =.";
-
-    // Syntax error near constant, variable, or procedure declarations.
-    case 4:
-      return "const, int, procedure must be followed by identifier.";
-
-    // You missed a semicolon or a comma somewhere. Also check that you aren’t
-    // adding extra semicolons to if-then-else and while-do’s.
-    case 5:
-      return "Semicolon or comma missing.";
-
-    // Not used
-    case 6:
-      return "";
-
-    // Not used
-    case 7:
-      return "";
-
-    // Not used
-    case 8:
-      return "";
-
-    // Missing a period at the end of the program.
-    case 9:
-      return "Period missing.";
-
-    // Except for the last one in a block, every statement needs to end with a semicolon.
-    case 10:
-      return "Semicolon between statements missing.";
-
-    // You tried to use an undeclared constant, variable, or procedure, or you tried to
-    // access something that is outside of your scope.
-    case 11:
-      return "Undeclared identifier.";
-
-    // You tried to assign a value to a constant or a procedure. Check your variable names.
-    case 12:
-      return "Assignment to constant or procedure is not allowed.";
-
-    // You began a statement with an identifier,   but it wasn’t followed by an assignment
-    // operator (:=).
-    case 13:
-      return "Assignment operator expected.";
-
-    // You used call, but you didn’t include the procedure name.
-    case 14:
-      return "Call must be followed by an identifier.";
-
-    // You tried to call a constant or a variable, which is meaningless.
-    case 15:
-      return "Call of a constant or variable is meaningless.";
-
-    // if [condition] must be followed by then [statement].
-    case 16:
-      return "then expected.";
-
-    // Not used
-    case 17:
-      return "";
-
-    // while [condition] must be followed by do [statement].
-    case 18:
-      return "do expected.";
-
-    // Not used
-    case 19:
-      return "";
-
-    // In a conditional expression, you are missing a relational operator.
-    case 20:
-      return "Relational operator expected.";
-
-    // You cannot use procedures in expressions (since they do not return or represent
-    // values).
-    case 21:
-      return "Expression must not contain a procedure identifier.";
-
-    // Missing the right parenthesis at the end of a factor.
-    case 22:
-      return "Right parenthesis missing.";
-
-    // There is something wrong with a factor used in an expression.
-    case 23:
-      return "The preceding factor cannot begin with this symbol.";
-
-    // Not used
-    case 24:
-      return "";
-
-    // Code generator exceeded the maximum number of lines of code.
-    case 25:
-      return "This number is too large.";
-
-    // You used out, but didn’t specify anything to output.
-    case 26:
-      return "out must be followed by an expression.";
-
-    // You used in, but you didn’t specify what variable to assign it to.
-    case 27:
-      return "in must be followed by an identifier.";
-
-    // Not used
-    case 28:
-      return "";
-
-    // Constants cannot be redefined.
-    case 29:
-      return "Cannot redefine constants.";
+      return "Number should not exceed 5 digits in length.";
 
     // Identifier exceed 11 characters in length
-    case 30:
-      return "Identifier's name is too long.";
+    case 2:
+        return "Identifier's name is too long.";
 
-    // Identifier starts with a number
-    case 31:
-      return "Variable does not start with letter.";
+    // Invalid symbol
+    case 3:
+      return "Invalid symbol found.";
 
     // Unknown error thrown
     default:
@@ -573,6 +457,18 @@ void scan() {
         free(t);
         continue;
       }
+      isIdentifier(t, counter);
+      if ( t->type != nulsym )
+      {
+          if ( t->type == numbersym )
+            printf(ANSI_COLOR_PURPLE"%s\n"ANSI_COLOR_RESET, t->name);
+          else
+            printf(ANSI_COLOR_REDP"%s\n"ANSI_COLOR_RESET, t->name);
+          tokenStorage[tokenCount++] = *t;
+          counter += getLength(t->name) - 1;
+          free(t);
+          continue;
+      }
 
       isSpecialSymbol(t, counter);
       if ( t->type != nulsym )
@@ -594,15 +490,6 @@ void scan() {
         continue;
       }
 
-      isIdentifier(t, counter);
-      if ( t->type != nulsym )
-      {
-        printf(ANSI_COLOR_REDP"%s\n"ANSI_COLOR_RESET, t->name);
-        tokenStorage[tokenCount++] = *t;
-        counter += getLength(t->name) - 1;
-        free(t);
-        continue;
-      }
     }
   }
 }
@@ -836,11 +723,14 @@ void isIdentifier(struct token* t, int inputPosition) {
   // Set the name to the identifier's value
   strcpy(t->name, value);
 
+  // Check if the token is actually a number instead of identifier
   int tmp = isDigit(inputPosition, 0, 0);
   char temp[20];
   sprintf(temp, "%d", tmp);
-  if (getLength(t->name) > getLength(temp) )
-    printf("%s == %s\n", t->name, temp);
+  if (strcmp(t->name, temp) == 0 )
+    t->type = numbersym;
+
+  error = 31;
 
   // Otherwise return the address of the struct that contains all the data about
   // the valid token
@@ -855,8 +745,8 @@ char* isId(int inputPosition, char* string, int length) {
   // *** I have a funny feelign this is where we need to throw an error for an id starting
   // *** with something other than a letter
   // A - Z || a - z || underscore
-  if ( !((string[0] >= 65 && string[0] <= 90) || ( string[0] >= 97 && string[0] <= 122)) )
-    return string;
+  // if ( !((string[0] >= 65 && string[0] <= 90) || ( string[0] >= 97 && string[0] <= 122)) )
+  //   return string;
   // else if( (string[0] >= 48 && string[0] <=57) )
   //   exit();
 
@@ -888,9 +778,10 @@ int getLength(char* string) {
     // keep a count of the number of letters so far until
     // we reach the terminating character \0
     int i = 0;
-    do
+    while ( string[i] != '\0')
+    {
         i++;
-    while ( string[i] != '\0');
+    }
     return i;
 }
 

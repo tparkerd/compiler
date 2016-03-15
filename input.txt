@@ -10,7 +10,7 @@ begin
 
 	read n;  /* Another comment */
 
-	s:= n*(n+1)/264866;
+	54s:= n*(n+1)/264866;
 	write s;
 
 	s:=0;
