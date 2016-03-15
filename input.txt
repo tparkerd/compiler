@@ -13,9 +13,10 @@ begin
 	54s:= n*(n+1)/264866;
 	write s;
 
-	s:=0;
+	spokemonsflkdj:=0;
 	i:=n;
 
+	@#%$ &ñ%
 	while i>0 do
 	begin
 		s:= s+ i;

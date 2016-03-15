@@ -1,3 +1,5 @@
+// nulsym is the \0 character
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -463,7 +465,7 @@ void scan() {
           if ( t->type == numbersym )
             printf(ANSI_COLOR_PURPLE"%s\n"ANSI_COLOR_RESET, t->name);
           else
-            printf(ANSI_COLOR_REDP"%s\n"ANSI_COLOR_RESET, t->name);
+            printf(ANSI_COLOR_WHITE"%s\n"ANSI_COLOR_RESET, t->name);
           tokenStorage[tokenCount++] = *t;
           counter += getLength(t->name) - 1;
           free(t);
@@ -489,6 +491,16 @@ void scan() {
         free(t);
         continue;
       }
+
+      // Invalid symbol was encounted
+      error = 3;
+      printf("%c: %s\n", cleanInput[counter], getErrorMessage(error));
+      printf(ANSI_COLOR_REDP"%c\n"ANSI_COLOR_RESET, cleanInput[counter]);
+      t->name[0] = cleanInput[counter];
+      t->type = nulsym;
+      t->id = 0;
+      tokenStorage[tokenCount++] = *t;
+      free(t);
 
     }
   }
@@ -728,9 +740,31 @@ void isIdentifier(struct token* t, int inputPosition) {
   char temp[20];
   sprintf(temp, "%d", tmp);
   if (strcmp(t->name, temp) == 0 )
-    t->type = numbersym;
+  {
+      t->type = numbersym;
+      if ( getLength(t->name) > 5 )
+      {
+          error = 1;
+          printf("%s: %s\n", t->name, getErrorMessage(error));
+          //   t->type = errsym;
 
-  error = 31;
+      }
+      return;
+  }
+
+
+  if ( t->name[0] >= 48 && t->name[0] <= 57 )
+  {
+      error = 0;
+      printf("%s: %s\n", t->name, getErrorMessage(error));
+      return;
+  }
+
+  if ( getLength(t->name) > 11 )
+  {
+      error = 2;
+      printf("%s: %s\n", t->name, getErrorMessage(error));
+  }
 
   // Otherwise return the address of the struct that contains all the data about
   // the valid token
