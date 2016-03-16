@@ -8,27 +8,23 @@ var i, n, s;
 
 begin
 
-	read n;  /* Another comment */
+	read n;
 
-	5invalidID9:= n*(n+1)/2;
-	binaryNum:= 00010001;
-	invalidNum:= 1000000;
-	_under:= 10000;
-	^fja:=25;
+	s:= n*(n+1)/2;
 	write s;
 
+	leadingZero:=000000000001;
+	i:=n*3/2356987245;
 
-	s:=0;
-	i:=n;
-
-	@#%$ &ñ%
 	while i>0 do
 	begin
+		24invalidID:= 10000;
 		s:= s+ i;
 
 		i:= i-1;
 	end;
 
+	@_shoebox:=9;
 	write s;
 
 end.

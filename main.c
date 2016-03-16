@@ -1,5 +1,3 @@
-// nulsym is the \0 character
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -29,13 +27,13 @@
 // Errors
 #define NUM_ERROR_TYPES 32
 #define MAX_VARIABLE_LENGTH 11
-#define ERROR_EXCEED_MAX_DIGITS 999999
+#define MAX_NUM_LENGTH 5
 
 typedef enum{
-    nulsym = 1, identsym, numbersym, plussym, minussym, multsym, slashsym, oddsym,
-    eqlsym, neqsym, lessym, leqsym, gtrsym, geqsym, lparentsym, rparentsym, commasym,
-    semicolonsym, periodsym, becomessym, beginsym, endsym, ifsym, thensym, whilesym,
-    dosym, callsym, constsym, varsym, procsym, writesym, readsym, elsesym, errsym
+  nulsym = 1, identsym, numbersym, plussym, minussym, multsym, slashsym, oddsym,
+  eqlsym, neqsym, lessym, leqsym, gtrsym, geqsym, lparentsym, rparentsym, commasym,
+  semicolonsym, periodsym, becomessym, beginsym, endsym, ifsym, thensym, whilesym,
+  dosym, callsym, constsym, varsym, procsym, writesym, readsym, elsesym, errsym
 } tokenType;
 
 typedef struct token {
@@ -99,6 +97,7 @@ char* isDigit(int inputPosition, char* string, int length);
 int isWhiteSpace(char c);
 int getLength(char* string);
 const char* getErrorMessage(int id);
+
 
 int main() {
   init();
@@ -324,29 +323,23 @@ void initTokenStorage() {
 }
 
 const char* getErrorMessage(int id) {
-  /*  Only one or two of these would used, but I was bored, so
-   *  I listed all the ones I found in a PL/0 manual I found.
-   *  I was thinking about using a global error flag that would
-   *  track when one of the isReserved, isIdentifier, isNumber,
-   *  or isSpecialSymbol came across an error.
-   */
   switch (id)
   {
     // Identifier starts with a number
     case 0:
-      return "Variable does not start with letter.";
+      return "Variable does not start with letter";
 
     // Number exceeds five digits
     case 1:
-      return "Number should not exceed 5 digits in length.";
+      return "Number should not exceed 5 digits in length";
 
     // Identifier exceed 11 characters in length
     case 2:
-        return "Identifier's name is too long.";
+        return "Identifier's name is too long";
 
     // Invalid symbol
     case 3:
-      return "Invalid symbol found.";
+      return "Invalid symbol found";
 
     // Unknown error thrown
     default:
@@ -444,55 +437,61 @@ void scan() {
   {
     if ( !isWhiteSpace(cleanInput[counter]) )
     {
+      // Assume that there is no error until proven otherwise
       error = 0;
       // printf("Check: %c\n", cleanInput[counter]);
       // Assume it is an invalid token type
       struct token t;
 
+      // Check if the current character starts a reserved word
       isReservedWord(&t, counter);
-      if ( t.type != nulsym )
+      if ( t.type != errsym )
       {
         printf(ANSI_COLOR_GREEN"%s\n"ANSI_COLOR_RESET, t.name);
         tokenStorage[tokenCount++] = t;
         counter += getLength(t.name) - 1;
         continue;
       }
+
+      // Check if the current character starts an identifier
       isIdentifier(&t, counter);
-      if ( t.type != nulsym )
+      if ( t.type != errsym )
       {
-          if ( t.type == numbersym )
-            printf(ANSI_COLOR_PURPLE"%s\n"ANSI_COLOR_RESET, t.name);
-          else
-            printf(ANSI_COLOR_WHITE"%s\n"ANSI_COLOR_RESET, t.name);
-          tokenStorage[tokenCount++] = t;
-          counter += getLength(t.name) - 1;
-          continue;
+        if ( t.type == numbersym )
+          printf(ANSI_COLOR_PURPLE"%s\n"ANSI_COLOR_RESET, t.name);
+        else
+          printf(ANSI_COLOR_WHITE"%s\n"ANSI_COLOR_RESET, t.name);
+        tokenStorage[tokenCount++] = t;
+        counter += getLength(t.name) - 1;
+        continue;
       }
 
+      // Check if the current character starts a special symbol
       isSpecialSymbol(&t, counter);
-      if ( t.type != nulsym )
+      if ( t.type != errsym )
       {
         printf(ANSI_COLOR_YELLOW"%s\n"ANSI_COLOR_RESET, t.name);
         tokenStorage[tokenCount++] = t;
         counter += getLength(t.name) - 1;
         continue;
       }
-      //
-      // isNumber(&t, counter);
-      // if ( t.type != nulsym )
-      // {
-      //   printf(ANSI_COLOR_PURPLE"%s\n"ANSI_COLOR_RESET, t.name);
-      //   tokenStorage[tokenCount++] = t;
-      //   counter += getLength(t.name) - 1;
-      //   continue;
-      // }
 
-      // Otherwise an invalid symbol was encounted
+      // Check if the current character starts a number
+      isNumber(&t, counter);
+      if ( t.type != errsym )
+      {
+        printf(ANSI_COLOR_PURPLE"%s\n"ANSI_COLOR_RESET, t.name);
+        tokenStorage[tokenCount++] = t;
+        counter += getLength(t.name) - 1;
+        continue;
+      }
+
+      // Otherwise an invalid symbol was encountered
       error = 3;
-      printf("%c: %s\n", cleanInput[counter], getErrorMessage(error));
+      printf(ANSI_COLOR_DARKRED"%s: "ANSI_COLOR_RESET, getErrorMessage(error));
       printf(ANSI_COLOR_REDP"%c\n"ANSI_COLOR_RESET, cleanInput[counter]);
       t.name[0] = cleanInput[counter];
-      t.type = nulsym;
+      t.type = errsym;
       t.id = 0;
       tokenStorage[tokenCount++] = t;
 
@@ -513,7 +512,7 @@ void isReservedWord(struct token* t, int inputPosition) {
   // the scan() function.)
   if ( value == 0 )
   {
-    t->type = nulsym;
+    t->type = errsym;
     return;
   }
 
@@ -574,14 +573,13 @@ void isNumber(struct token* t, int inputPosition) {
   // Initialize the tempString to be empty
   memset(&string[0], 0, sizeof(string));
 
-  char* value = isDigit(inputPosition, 0, 0);
+  char* value = isDigit(inputPosition, string, 0);
 
   // If the token was not a valid number, return the placeholder token
-  // with a nulsym type
+  // with a errsym type
   if ( getLength(value) == 0 )
   {
-    // Free up memory allocated to the temp string
-    free(value);
+    t->type = errsym;
     return;
   }
 
@@ -591,9 +589,6 @@ void isNumber(struct token* t, int inputPosition) {
 
   // Set token's type to be a number
   t->type = numbersym;
-
-  // Free up the memory for the string
-  free(value);
 
   // Otherwise return the address of the struct that contains all the data about
   // the valid token
@@ -628,7 +623,7 @@ void isSpecialSymbol(struct token* t, int inputPosition) {
   // the scan() function.)
   if ( value == 0 )
   {
-    t->type = nulsym;
+    t->type = errsym;
     return;
   }
 
@@ -698,7 +693,7 @@ void isIdentifier(struct token* t, int inputPosition) {
   // If the token was not a valid idenfier, return a null sym
   if ( strcmp(value, "") == 0 )
   {
-    t->type = nulsym;
+    t->type = errsym;
     return;
   }
 
@@ -721,12 +716,13 @@ void isIdentifier(struct token* t, int inputPosition) {
   {
     // Set type to number
     t->type = numbersym;
+    t->id = 3;
     // If the number exceeds five digits in length, throw an error
-    if ( getLength(t->name) > 5 )
+    if ( getLength(t->name) > MAX_NUM_LENGTH )
     {
         error = 1;
-        printf("%s: ", getErrorMessage(error));
-        t->type = nulsym;
+        printf(ANSI_COLOR_DARKRED"%s: "ANSI_COLOR_RESET, getErrorMessage(error));
+        t->type = errsym;
     }
     // Free up the memory for the temp string
     free(temp);
@@ -735,19 +731,26 @@ void isIdentifier(struct token* t, int inputPosition) {
 
   // If the first character of the possible identifier is not a letter
   // throw an error that it is no longer a valid one
-  if ( t->name[0] >= 48 && t->name[0] <= 57 )
-  {
-      error = 0;
-      printf("%s: %s\n", t->name, getErrorMessage(error));
-      // Free up the memory for the temp string
-      free(temp);
-      return;
-  }
+  if ( !( /* A - Z */
+        (t->name[0] >= 65 && t->name[0] <= 90)
+        || /* a - z */
+        ( t->name[0] >= 97 && t->name[0] <= 122)
+        || /* underscore */
+        (t->name[0] == 95)
+        )
+      )
+      {
+        error = 0;
+        printf(ANSI_COLOR_DARKRED"%s: "ANSI_COLOR_RESET, getErrorMessage(error));
+        // Free up the memory for the temp string
+        free(temp);
+        return;
+      }
 
   if ( getLength(t->name) > 11 )
   {
       error = 2;
-      printf("%s: %s\n", t->name, getErrorMessage(error));
+      printf(ANSI_COLOR_DARKRED"%s: "ANSI_COLOR_RESET, getErrorMessage(error));
   }
 
   // Free up the memory for the temp string
@@ -801,10 +804,12 @@ void writeLexemeTable() {
     int i;
     lexemeTable = fopen("lexemetable.txt", "w");
     fprintf(lexemeTable, "%-15s%s", "Lexeme\t", "Token Type\n");
+    printf("%-15s%s", "Lexeme\t", "Token Type\n");
     for (i = 0; i < counter; i++)
     {
         if ( strcmp(tokenStorage[i].name, "") == 0 )
-            continue;
+          continue;
+        printf("%-15s\t%-d\n", tokenStorage[i].name, tokenStorage[i].id);
         fprintf(lexemeTable, "%-15s\t%-d\n", tokenStorage[i].name, tokenStorage[i].id);
     }
     fclose(lexemeTable);
