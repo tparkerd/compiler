@@ -10,9 +10,11 @@ begin
 
 	read n;  /* Another comment */
 
-	54s:= n*(n+1)/1000;
-	e:= n*/1111;
-	bob:= n*/648542;
+	5invalidID9:= n*(n+1)/2;
+	binaryNum:= 00010001;
+	invalidNum:= 1000000;
+	_under:= 10000;
+	^fja:=25;
 	write s;
 
 

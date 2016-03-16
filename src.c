@@ -60,14 +60,21 @@ void isIdentifier(struct token* t, int inputPosition) {
 
   // If the first character of the possible identifier is not a letter
   // throw an error that it is no longer a valid one
-  if ( t->name[0] >= 48 && t->name[0] <= 57 )
-  {
-      error = 0;
-      printf("%s: %s\n", t->name, getErrorMessage(error));
-      // Free up the memory for the temp string
-      free(temp);
-      return;
-  }
+  if ( !( /* A - Z */
+        (t->name[0] >= 65 && t->name[0] <= 90)
+        || /* a - z */
+        ( t->name[0] >= 97 && t->name[0] <= 122)
+        || /* underscore */
+        (t->name[0] == 95)
+        )
+      )
+      {
+        error = 0;
+        printf("%s: %s\n", t->name, getErrorMessage(error));
+        // Free up the memory for the temp string
+        free(temp);
+        return;
+      }
 
   if ( getLength(t->name) > 11 )
   {
