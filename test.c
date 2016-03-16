@@ -21,11 +21,10 @@
 #define ANSI_COLOR_PINK          "\x1b[95m"
 #define ANSI_COLOR_CYAN          "\x1b[96m"
 
-#define MAX_FILE_LENGTH 2000
+#define MAX_FILE_LENGTH 500
 #define NUM_IS_DIGIT 10
 #define NUM_RESERVED_WORDS 14
 #define NUM_SPECIAL_SYMBOLS 16
-#define INVALID_NUM 100000
 
 // Errors
 #define NUM_ERROR_TYPES 32
@@ -36,7 +35,7 @@ typedef enum{
     nulsym = 1, identsym, numbersym, plussym, minussym, multsym, slashsym, oddsym,
     eqlsym, neqsym, lessym, leqsym, gtrsym, geqsym, lparentsym, rparentsym, commasym,
     semicolonsym, periodsym, becomessym, beginsym, endsym, ifsym, thensym, whilesym,
-    dosym, callsym, constsym, varsym, procsym, writesym, readsym, elsesym
+    dosym, callsym, constsym, varsym, procsym, writesym, readsym, elsesym, errsym
 } tokenType;
 
 typedef struct token {
@@ -94,7 +93,7 @@ int isReserved(int inputPosition, char* string, int length);
 void isSpecialSymbol(struct token* t, int inputPosition);
 int isSpecial(int inputPosition, char* string, int length);
 void isNumber(struct token* t, int inputPosition);
-int isDigit(int inputPosition, int length, int total);
+char* isDigit(int inputPosition, char* string, int length);
 
 // Helper functions for readability and common use
 int isWhiteSpace(char c);
@@ -448,9 +447,7 @@ void scan() {
       error = 0;
       // printf("Check: %c\n", cleanInput[counter]);
       // Assume it is an invalid token type
-      // struct token* t = (struct token*)malloc(sizeof(struct token));
       struct token t;
-      memset(&t, 0, sizeof(struct token));
 
       isReservedWord(&t, counter);
       if ( t.type != nulsym )
@@ -480,17 +477,17 @@ void scan() {
         counter += getLength(t.name) - 1;
         continue;
       }
+      //
+      // isNumber(&t, counter);
+      // if ( t.type != nulsym )
+      // {
+      //   printf(ANSI_COLOR_PURPLE"%s\n"ANSI_COLOR_RESET, t.name);
+      //   tokenStorage[tokenCount++] = t;
+      //   counter += getLength(t.name) - 1;
+      //   continue;
+      // }
 
-      isNumber(&t, counter);
-      if ( t.type != nulsym)
-      {
-        printf(ANSI_COLOR_PURPLE"%s\n"ANSI_COLOR_RESET, t.name);
-        tokenStorage[tokenCount++] = t;
-        counter += getLength(t.name) - 1;
-        continue;
-      }
-
-      // Invalid symbol was encounted
+      // Otherwise an invalid symbol was encounted
       error = 3;
       printf("%c: %s\n", cleanInput[counter], getErrorMessage(error));
       printf(ANSI_COLOR_REDP"%c\n"ANSI_COLOR_RESET, cleanInput[counter]);
@@ -572,15 +569,21 @@ int isReserved(int inputPosition, char* string, int length) {
 }
 
 void isNumber(struct token* t, int inputPosition) {
-  // Get the return value of the check if it is a reserved word
-  // Also, assume that the number is invalid, so if the string
-  // is empty, the first digit will replace the string.
-  int value = isDigit(inputPosition, 0, INVALID_NUM);
+  // Create a temporary string to test the current possible token
+  char string[20];
+  // Initialize the tempString to be empty
+  memset(&string[0], 0, sizeof(string));
+
+  char* value = isDigit(inputPosition, 0, 0);
 
   // If the token was not a valid number, return the placeholder token
   // with a nulsym type
-  if ( value == INVALID_NUM )
+  if ( getLength(value) == 0 )
+  {
+    // Free up memory allocated to the temp string
+    free(value);
     return;
+  }
 
   // Valid token was found, set its values
   // A number is stored with an token type of 3
@@ -589,38 +592,27 @@ void isNumber(struct token* t, int inputPosition) {
   // Set token's type to be a number
   t->type = numbersym;
 
-  // Its name is its value as a string
-  // There's not a great way to convert an integer to a string, but
-  // apparently there are a few available ones out there like sprintf
-  // and snprintf
-  //     (dest,format,value)
-  sprintf(t->name, "%d", value);
+  // Free up the memory for the string
+  free(value);
 
   // Otherwise return the address of the struct that contains all the data about
   // the valid token
   return;
 }
 
-int isDigit(int inputPosition, int length, int total) {
+char* isDigit(int inputPosition, char* string, int length) {
+  // Affix the next letter to the string
+  string[length] = cleanInput[inputPosition];
+
   // If it's not a number, return the value that's already known
   if ( !(cleanInput[inputPosition] >= 48 && cleanInput[inputPosition] <= 57) )
   {
-    // We've reached the end of a number, so skip forward along the clean input array
-    if ( total == INVALID_NUM )
-      return total;
-    else
-      return total / 10;
+    string[length] = '\0';
+    return string;
   }
 
-  // If the starting total is invalid, set it to the first digit of the number
-  if ( total == INVALID_NUM )
-    total = cleanInput[inputPosition] - '0';
-  else
-    total += cleanInput[inputPosition] - '0';
-
-  total *= 10;
-
-  return isDigit(inputPosition + 1, length + 1, total);
+  // Otherwise, add the next letter to the string and try again
+  return isDigit(inputPosition + 1, string, length + 1);
 }
 
 void isSpecialSymbol(struct token* t, int inputPosition) {
@@ -721,27 +713,34 @@ void isIdentifier(struct token* t, int inputPosition) {
   strcpy(t->name, value);
 
   // Check if the token is actually a number instead of identifier
-  int tmp = isDigit(inputPosition, 0, INVALID_NUM);
-  char temp[20];
-  sprintf(temp, "%d", tmp);
+  char* temp = (char*)malloc(20 * sizeof(char));
+  temp = isDigit(inputPosition, temp, 0);
+  // If the length of the string is the same as if it were made up of only
+  // digits, it is safe to assume it is a number
   if (strcmp(t->name, temp) == 0 )
   {
-      t->type = numbersym;
-      if ( getLength(t->name) > 999999999999 )
-      {
-          error = 1;
-          printf("%s: %s\n", t->name, getErrorMessage(error));
-          //   t->type = errsym;
-
-      }
-      return;
+    // Set type to number
+    t->type = numbersym;
+    // If the number exceeds five digits in length, throw an error
+    if ( getLength(t->name) > 5 )
+    {
+        error = 1;
+        printf("%s: ", getErrorMessage(error));
+        t->type = nulsym;
+    }
+    // Free up the memory for the temp string
+    free(temp);
+    return;
   }
 
-
+  // If the first character of the possible identifier is not a letter
+  // throw an error that it is no longer a valid one
   if ( t->name[0] >= 48 && t->name[0] <= 57 )
   {
       error = 0;
       printf("%s: %s\n", t->name, getErrorMessage(error));
+      // Free up the memory for the temp string
+      free(temp);
       return;
   }
 
@@ -750,6 +749,9 @@ void isIdentifier(struct token* t, int inputPosition) {
       error = 2;
       printf("%s: %s\n", t->name, getErrorMessage(error));
   }
+
+  // Free up the memory for the temp string
+  free(temp);
 
   // Otherwise return the address of the struct that contains all the data about
   // the valid token

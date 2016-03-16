@@ -2,78 +2,83 @@
 
 
 int main() {
-  printf("Initialize data: ");
   init();
-  printf("done\n\n");
-  printf("Read file contents: ");
   read();
-  printf("done\n\n");
-  printf("Scanning input\n__________________________\n");
   scan();
-  printf("__________________________\n\n");
-
-  printf("Lexeme Table\n__________________________\n");
   writeLexemeTable();
   writeLexemeList();
   return 0;
 }
 
-void scan() {
-  // For each character in the input array (cleaninput.txt)
-  for( counter = 0; counter < MAX_FILE_LENGTH - 1; counter++ )
+
+void isIdentifier(struct token* t, int inputPosition) {
+  // Create a temporary string to test the current possible token
+  char string[20];
+  // Initialize the tempString to be empty
+  memset(&string[0], 0, sizeof(string));
+
+  // Get the return value of the check if it is a reserved word
+  char* value = isId(inputPosition, string, 0);
+
+  // If the token was not a valid idenfier, return a null sym
+  if ( strcmp(value, "") == 0 )
   {
-    if ( !isWhiteSpace(cleanInput[counter]) )
-    {
-      error = 0;
-      // printf("Check: %c\n", cleanInput[counter]);
-      // Assume it is an invalid token type
-      struct token* t = (struct token*)malloc(sizeof(struct token));
-
-      t = isReservedWord(t, counter);
-      if ( t->type != nulsym )
-      {
-        printf(ANSI_COLOR_GREEN"%s\n"ANSI_COLOR_RESET, t->name);
-        tokenStorage[tokenCount++] = *t;
-        counter += getLength(t->name) - 1;
-        free(t);
-        continue;
-      }
-
-      t = isIdentifier(t, counter);
-      if ( t->type != nulsym )
-      {
-        if ( t->type == numbersym )
-          printf(ANSI_COLOR_REDP"%s\n"ANSI_COLOR_RESET, t->name);
-        else if (t->type == identsym )
-          printf(ANSI_COLOR_CYAN"%s\n"ANSI_COLOR_RESET, t->name);
-
-        tokenStorage[tokenCount++] = *t;
-        counter += getLength(t->name) - 1;
-        free(t);
-        continue;
-      }
-
-      t = isSpecialSymbol(t, counter);
-      if ( t->type != nulsym )
-      {
-        printf(ANSI_COLOR_YELLOW"%s\n"ANSI_COLOR_RESET, t->name);
-        tokenStorage[tokenCount++] = *t;
-        counter += getLength(t->name) - 1;
-        free(t);
-        continue;
-      }
-
-      t = isNumber(t, counter);
-      if ( t->type != nulsym)
-      {
-        printf(ANSI_COLOR_PINK"%s\n"ANSI_COLOR_RESET, t->name);
-        tokenStorage[tokenCount++] = *t;
-        counter += getLength(t->name) - 1;
-        free(t);
-        continue;
-      }
-
-
-    }
+    t->type = nulsym;
+    return;
   }
+
+  // Valid token was found, set its values
+  // All identifiers have a token type of two
+  t->id = 2;
+
+  // Set type
+  t->type = identsym;
+
+  // Set the name to the identifier's value
+  strcpy(t->name, value);
+
+  // Check if the token is actually a number instead of identifier
+  char* temp = (char*)malloc(20 * sizeof(char));
+  temp = isDigit(inputPosition, temp, 0);
+  // If the length of the string is the same as if it were made up of only
+  // digits, it is safe to assume it is a number
+  if (strcmp(t->name, temp) == 0 )
+  {
+    // Set type to number
+    t->type = numbersym;
+    // If the number exceeds five digits in length, throw an error
+    if ( getLength(t->name) > 5 )
+    {
+        error = 1;
+        printf("%s: ", getErrorMessage(error));
+        t->type = nulsym;
+    }
+    // Free up the memory for the temp string
+    free(temp);
+    return;
+  }
+
+  // If the first character of the possible identifier is not a letter
+  // throw an error that it is no longer a valid one
+  if ( t->name[0] >= 48 && t->name[0] <= 57 )
+  {
+      error = 0;
+      printf("%s: %s\n", t->name, getErrorMessage(error));
+      // Free up the memory for the temp string
+      free(temp);
+      return;
+  }
+
+  if ( getLength(t->name) > 11 )
+  {
+      error = 2;
+      printf("%s: %s\n", t->name, getErrorMessage(error));
+  }
+
+  // Free up the memory for the temp string
+  free(temp);
+
+  // Otherwise return the address of the struct that contains all the data about
+  // the valid token
+  return;
 }

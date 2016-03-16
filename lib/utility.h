@@ -1,5 +1,6 @@
 #ifndef UTILITY_H
 #define UTILITY_H
+// nulsym is the \0 character
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,7 +27,6 @@
 #define NUM_IS_DIGIT 10
 #define NUM_RESERVED_WORDS 14
 #define NUM_SPECIAL_SYMBOLS 16
-#define INVALID_NUM 100000
 
 // Errors
 #define NUM_ERROR_TYPES 32
@@ -37,7 +37,7 @@ typedef enum{
     nulsym = 1, identsym, numbersym, plussym, minussym, multsym, slashsym, oddsym,
     eqlsym, neqsym, lessym, leqsym, gtrsym, geqsym, lparentsym, rparentsym, commasym,
     semicolonsym, periodsym, becomessym, beginsym, endsym, ifsym, thensym, whilesym,
-    dosym, callsym, constsym, varsym, procsym, writesym, readsym, elsesym
+    dosym, callsym, constsym, varsym, procsym, writesym, readsym, elsesym, errsym
 } tokenType;
 
 typedef struct token {
@@ -65,8 +65,10 @@ token tokenStorage[MAX_FILE_LENGTH];
 
 // Counter to move along the input file's contents, character by character
 int counter;
-int tokenCount = 0;
-int error = 0;
+// Number of known tokens
+int tokenCount;
+// Global flag for error handling
+int error;
 
 // Function Prototypes
 // Initialize data: known digits, reserved words, and symbols
@@ -86,19 +88,20 @@ void writeLexemeList();
 
 // Scan to understand the code (previously known as covertascii)
 void scan();
-struct token* isIdentifier(struct token* t, int inputPosition);
+void isIdentifier(struct token* t, int inputPosition);
 char* isId(int inputPosition, char* string, int length);
-struct token* isReservedWord(struct token* t, int inputPosition);
+void isReservedWord(struct token* t, int inputPosition);
 int isReserved(int inputPosition, char* string, int length);
-struct token* isSpecialSymbol(struct token* t, int inputPosition);
+void isSpecialSymbol(struct token* t, int inputPosition);
 int isSpecial(int inputPosition, char* string, int length);
-struct token* isNumber(struct token* t, int inputPosition);
-int isDigit(int inputPosition, int length, int total);
+void isNumber(struct token* t, int inputPosition);
+char* isDigit(int inputPosition, char* string, int length);
 
 // Helper functions for readability and common use
 int isWhiteSpace(char c);
 int getLength(char* string);
 const char* getErrorMessage(int id);
+
 
 // Functions
 
@@ -315,139 +318,29 @@ void initTokenStorage() {
 }
 
 const char* getErrorMessage(int id) {
+  /*  Only one or two of these would used, but I was bored, so
+   *  I listed all the ones I found in a PL/0 manual I found.
+   *  I was thinking about using a global error flag that would
+   *  track when one of the isReserved, isIdentifier, isNumber,
+   *  or isSpecialSymbol came across an error.
+   */
   switch (id)
   {
-    // No error - should *not* need this, but just in case
+    // Identifier starts with a number
     case 0:
-      return "";
+      return "Variable does not start with letter.";
 
-    // Assigned a value to a variable using =.
+    // Number exceeds five digits
     case 1:
-      return "Use = instead of :=.";
-
-    // Syntax error near constant declarations or in a conditional expression
-    case 2:
-      return "= must be followed by a number.";
-
-    // Syntax error near constant declarations.
-    case 3:
-      return "Identifier must be followed by =.";
-
-    // Syntax error near constant, variable, or procedure declarations.
-    case 4:
-      return "const, int, procedure must be followed by identifier.";
-
-    // You missed a semicolon or a comma somewhere. Also check that you aren’t
-    // adding extra semicolons to if-then-else and while-do’s.
-    case 5:
-      return "Semicolon or comma missing.";
-
-    // Not used
-    case 6:
-      return "";
-
-    // Not used
-    case 7:
-      return "";
-
-    // Not used
-    case 8:
-      return "";
-
-    // Missing a period at the end of the program.
-    case 9:
-      return "Period missing.";
-
-    // Except for the last one in a block, every statement needs to end with a semicolon.
-    case 10:
-      return "Semicolon between statements missing.";
-
-    // You tried to use an undeclared constant, variable, or procedure, or you tried to
-    // access something that is outside of your scope.
-    case 11:
-      return "Undeclared identifier.";
-
-    // You tried to assign a value to a constant or a procedure. Check your variable names.
-    case 12:
-      return "Assignment to constant or procedure is not allowed.";
-
-    // You began a statement with an identifier,   but it wasn’t followed by an assignment
-    // operator (:=).
-    case 13:
-      return "Assignment operator expected.";
-
-    // You used call, but you didn’t include the procedure name.
-    case 14:
-      return "Call must be followed by an identifier.";
-
-    // You tried to call a constant or a variable, which is meaningless.
-    case 15:
-      return "Call of a constant or variable is meaningless.";
-
-    // if [condition] must be followed by then [statement].
-    case 16:
-      return "then expected.";
-
-    // Not used
-    case 17:
-      return "";
-
-    // while [condition] must be followed by do [statement].
-    case 18:
-      return "do expected.";
-
-    // Not used
-    case 19:
-      return "";
-
-    // In a conditional expression, you are missing a relational operator.
-    case 20:
-      return "Relational operator expected.";
-
-    // You cannot use procedures in expressions (since they do not return or represent
-    // values).
-    case 21:
-      return "Expression must not contain a procedure identifier.";
-
-    // Missing the right parenthesis at the end of a factor.
-    case 22:
-      return "Right parenthesis missing.";
-
-    // There is something wrong with a factor used in an expression.
-    case 23:
-      return "The preceding factor cannot begin with this symbol.";
-
-    // Not used
-    case 24:
-      return "";
-
-    // Code generator exceeded the maximum number of lines of code.
-    case 25:
-      return "This number is too large.";
-
-    // You used out, but didn’t specify anything to output.
-    case 26:
-      return "out must be followed by an expression.";
-
-    // You used in, but you didn’t specify what variable to assign it to.
-    case 27:
-      return "in must be followed by an identifier.";
-
-    // Not used
-    case 28:
-      return "";
-
-    // Constants cannot be redefined.
-    case 29:
-      return "Cannot redefine constants.";
+      return "Number should not exceed 5 digits in length.";
 
     // Identifier exceed 11 characters in length
-    case 30:
-      return "Identifier's name is too long.";
+    case 2:
+        return "Identifier's name is too long.";
 
-    // Identifier starts with a number
-    case 31:
-      return "Variable does not start with letter.";
+    // Invalid symbol
+    case 3:
+      return "Invalid symbol found.";
 
     // Unknown error thrown
     default:
@@ -537,7 +430,71 @@ void removeWhiteSpace() {
     printf("\n");
 }
 
-struct token* isReservedWord(struct token* t, int inputPosition) {
+void scan() {
+  // Start with an empty token list
+  tokenCount = 0;
+  // For each character in the input array (cleaninput.txt)
+  for( counter = 0; counter < MAX_FILE_LENGTH - 1; counter++ )
+  {
+    if ( !isWhiteSpace(cleanInput[counter]) )
+    {
+      error = 0;
+      // printf("Check: %c\n", cleanInput[counter]);
+      // Assume it is an invalid token type
+      struct token t;
+
+      isReservedWord(&t, counter);
+      if ( t.type != nulsym )
+      {
+        printf(ANSI_COLOR_GREEN"%s\n"ANSI_COLOR_RESET, t.name);
+        tokenStorage[tokenCount++] = t;
+        counter += getLength(t.name) - 1;
+        continue;
+      }
+      isIdentifier(&t, counter);
+      if ( t.type != nulsym )
+      {
+          if ( t.type == numbersym )
+            printf(ANSI_COLOR_PURPLE"%s\n"ANSI_COLOR_RESET, t.name);
+          else
+            printf(ANSI_COLOR_WHITE"%s\n"ANSI_COLOR_RESET, t.name);
+          tokenStorage[tokenCount++] = t;
+          counter += getLength(t.name) - 1;
+          continue;
+      }
+
+      isSpecialSymbol(&t, counter);
+      if ( t.type != nulsym )
+      {
+        printf(ANSI_COLOR_YELLOW"%s\n"ANSI_COLOR_RESET, t.name);
+        tokenStorage[tokenCount++] = t;
+        counter += getLength(t.name) - 1;
+        continue;
+      }
+      //
+      // isNumber(&t, counter);
+      // if ( t.type != nulsym )
+      // {
+      //   printf(ANSI_COLOR_PURPLE"%s\n"ANSI_COLOR_RESET, t.name);
+      //   tokenStorage[tokenCount++] = t;
+      //   counter += getLength(t.name) - 1;
+      //   continue;
+      // }
+
+      // Otherwise an invalid symbol was encounted
+      error = 3;
+      printf("%c: %s\n", cleanInput[counter], getErrorMessage(error));
+      printf(ANSI_COLOR_REDP"%c\n"ANSI_COLOR_RESET, cleanInput[counter]);
+      t.name[0] = cleanInput[counter];
+      t.type = nulsym;
+      t.id = 0;
+      tokenStorage[tokenCount++] = t;
+
+    }
+  }
+}
+
+void isReservedWord(struct token* t, int inputPosition) {
   // Create a temporary string to test the current possible token
   char string[20];
   // Initialize the tempString to be empty
@@ -551,7 +508,7 @@ struct token* isReservedWord(struct token* t, int inputPosition) {
   if ( value == 0 )
   {
     t->type = nulsym;
-    return t;
+    return;
   }
 
   // Valid token was found, set its values
@@ -568,7 +525,7 @@ struct token* isReservedWord(struct token* t, int inputPosition) {
   }
 
   // Return the token with all its known values
-  return t;
+  return;
 }
 
 int isReserved(int inputPosition, char* string, int length) {
@@ -605,18 +562,21 @@ int isReserved(int inputPosition, char* string, int length) {
   return isReserved(inputPosition + 1, string, length + 1);
 }
 
-struct token* isNumber(struct token* t, int inputPosition) {
-  // Get the return value of the check if it is a reserved word
-  // Also, assume that the number is invalid, so if the string
-  // is empty, the first digit will replace the string.
-  int value = isDigit(inputPosition, 0, INVALID_NUM);
+void isNumber(struct token* t, int inputPosition) {
+  // Create a temporary string to test the current possible token
+  char string[20];
+  // Initialize the tempString to be empty
+  memset(&string[0], 0, sizeof(string));
+
+  char* value = isDigit(inputPosition, 0, 0);
 
   // If the token was not a valid number, return the placeholder token
   // with a nulsym type
-  if ( value == INVALID_NUM )
+  if ( getLength(value) == 0 )
   {
-    t->type = nulsym;
-    return t;
+    // Free up memory allocated to the temp string
+    free(value);
+    return;
   }
 
   // Valid token was found, set its values
@@ -626,50 +586,30 @@ struct token* isNumber(struct token* t, int inputPosition) {
   // Set token's type to be a number
   t->type = numbersym;
 
-  // Its name is its value as a string
-  // There's not a great way to convert an integer to a string, but
-  // apparently there are a few available ones out there like sprintf
-  // and snprintf
-  //     (dest,format,value)
-  sprintf(t->name, "%d", value);
-
-  //
-  // if ( error == 25 )
-  //   printf("%s\n", getErrorMessage(error));
+  // Free up the memory for the string
+  free(value);
 
   // Otherwise return the address of the struct that contains all the data about
   // the valid token
-  return t;
+  return;
 }
 
-int isDigit(int inputPosition, int length, int total) {
-  // Although the entire number needs to be tokenized, if it
-  // exceeds five digits in length, we throw an error
-  if (length > 5)
-    error = 25;
+char* isDigit(int inputPosition, char* string, int length) {
+  // Affix the next letter to the string
+  string[length] = cleanInput[inputPosition];
 
   // If it's not a number, return the value that's already known
   if ( !(cleanInput[inputPosition] >= 48 && cleanInput[inputPosition] <= 57) )
   {
-    // We've reached the end of a number, so skip forward along the clean input array
-    if ( total == INVALID_NUM )
-      return total;
-    else
-      return total / 10;
+    string[length] = '\0';
+    return string;
   }
 
-  // If the starting total is invalid, set it to the first digit of the number
-  if ( total == INVALID_NUM )
-    total = cleanInput[inputPosition] - '0';
-  else
-    total += cleanInput[inputPosition] - '0';
-
-  total *= 10;
-
-  return isDigit(inputPosition + 1, length + 1, total);
+  // Otherwise, add the next letter to the string and try again
+  return isDigit(inputPosition + 1, string, length + 1);
 }
 
-struct token* isSpecialSymbol(struct token* t, int inputPosition) {
+void isSpecialSymbol(struct token* t, int inputPosition) {
   // Create a temporary string to test the current possible token
   char string[20];
   // Initialize the tempString to be empty
@@ -683,7 +623,7 @@ struct token* isSpecialSymbol(struct token* t, int inputPosition) {
   if ( value == 0 )
   {
     t->type = nulsym;
-    return t;
+    return;
   }
 
   // Valid token was found, set its values
@@ -703,20 +643,20 @@ struct token* isSpecialSymbol(struct token* t, int inputPosition) {
 
   // Otherwise return the address of the struct that contains all the data about
   // the valid token
-  return t;
+  return;
 }
 
 int isSpecial(int inputPosition, char* string, int length) {
   // Length of string exceeds the max length of all known reserved words
   // or is an empty string, return false, as it is not a reserved word.
   if (length > 2)
-  return 0;
+    return 0;
 
   // Affix the next letter to the string
   string[length] = cleanInput[inputPosition];
 
   // If the string doesn't start with a special character, return false
-  // *only check when the string has one character
+  // *only check when the string has one character -- not necessary though
   if ( length == 0 )
     // ( ) * + ,  - . / OR : ; < = >
     if ( !( (string[0] >= 40 && string[0] <= 47) || ( string[0] >= 58 && string[0] <= 62) ) )
@@ -740,61 +680,10 @@ int isSpecial(int inputPosition, char* string, int length) {
   return isSpecial(inputPosition + 1, string, length + 1);
 }
 
-struct token* isIdentifier(struct token* t, int inputPosition) {
-  // Create a temporary string to test the current possible token
-  char string[20];
-  // Initialize the tempString to be empty
-  memset(&string[0], 0, sizeof(string));
-
-  // Get the return value of the check if it is a reserved word
-  char* value = isId(inputPosition, string, 0);
-
-  // If the token was not a valid reserved word, return null (false condition for
-  // the scan() function.)
-  if ( strcmp(value, "") == 0 )
-  {
-    t->type = nulsym;
-    return t;
-  }
-
-  // Identifier exceeds allowable length
-  if ( getLength(string) > MAX_VARIABLE_LENGTH )
-    error = 30;
-
-  // Identifier starts with number
-  if ( t->name[0] >= 48 && t->name[0]  <= 57 )
-    error = 31;
-
-  // If the identifier is actually a number
-  if ( isNumber(t, inputPosition)->type != nulsym )
-    return isNumber(t, inputPosition);
-
-  if (error != 0)
-    printf("%s\n", getErrorMessage(error));
-
-  // Valid token was found, set its values
-  // All identifiers have a token type of two
-  t->id = 2;
-
-  // Set type
-  t->type = identsym;
-
-  // Set the name to the identifier's value
-  strcpy(t->name, value);
-
-  // Otherwise return the address of the struct that contains all the data about
-  // the valid token
-  return t;
-}
 
 char* isId(int inputPosition, char* string, int length) {
   // Affix the next letter to the string
   string[length] = cleanInput[inputPosition];
-
-  // If the string doesn't start with a letter or underscore, mark it as an invalid identifier
-  // A - Z || a - z || underscore
-  if ( !((string[0] >= 65 && string[0] <= 90) || ( string[0] >= 97 && string[0] <= 122)) )
-    error = 31;
 
   // If the current letter is not a letter, underscore, or number, we've reached the
   // end of the possible identifier.
@@ -824,9 +713,10 @@ int getLength(char* string) {
     // keep a count of the number of letters so far until
     // we reach the terminating character \0
     int i = 0;
-    do
+    while ( string[i] != '\0')
+    {
         i++;
-    while ( string[i] != '\0');
+    }
     return i;
 }
 
@@ -838,7 +728,6 @@ void writeLexemeTable() {
     {
         if ( strcmp(tokenStorage[i].name, "") == 0 )
             continue;
-        printf("%-15s\t%-d\n", tokenStorage[i].name, tokenStorage[i].id);
         fprintf(lexemeTable, "%-15s\t%-d\n", tokenStorage[i].name, tokenStorage[i].id);
     }
     fclose(lexemeTable);
