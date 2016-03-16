@@ -1,5 +1,3 @@
-// nulsym is the \0 character
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,7 +19,7 @@
 #define ANSI_COLOR_PINK          "\x1b[95m"
 #define ANSI_COLOR_CYAN          "\x1b[96m"
 
-#define MAX_FILE_LENGTH 2000
+#define MAX_FILE_LENGTH 500
 #define NUM_IS_DIGIT 10
 #define NUM_RESERVED_WORDS 14
 #define NUM_SPECIAL_SYMBOLS 16
@@ -87,13 +85,13 @@ void writeLexemeList();
 
 // Scan to understand the code (previously known as covertascii)
 void scan();
-void isIdentifier(struct token* t, int inputPosition);
+struct token* isIdentifier(struct token* t, int inputPosition);
 char* isId(int inputPosition, char* string, int length);
-void isReservedWord(struct token* t, int inputPosition);
+struct token* isReservedWord(struct token* t, int inputPosition);
 int isReserved(int inputPosition, char* string, int length);
-void isSpecialSymbol(struct token* t, int inputPosition);
+struct token* isSpecialSymbol(struct token* t, int inputPosition);
 int isSpecial(int inputPosition, char* string, int length);
-void isNumber(struct token* t, int inputPosition);
+struct token* isNumber(struct token* t, int inputPosition);
 int isDigit(int inputPosition, int length, int total);
 
 // Helper functions for readability and common use
@@ -333,21 +331,137 @@ const char* getErrorMessage(int id) {
    */
   switch (id)
   {
-    // Identifier starts with a number
+    // No error - should *not* need this, but just in case
     case 0:
-      return "Variable does not start with letter.";
+      return "";
 
-    // Number exceeds five digits
+    // Assigned a value to a variable using =.
     case 1:
-      return "Number should not exceed 5 digits in length.";
+      return "Use = instead of :=.";
+
+    // Syntax error near constant declarations or in a conditional expression
+    case 2:
+      return "= must be followed by a number.";
+
+    // Syntax error near constant declarations.
+    case 3:
+      return "Identifier must be followed by =.";
+
+    // Syntax error near constant, variable, or procedure declarations.
+    case 4:
+      return "const, int, procedure must be followed by identifier.";
+
+    // You missed a semicolon or a comma somewhere. Also check that you aren’t
+    // adding extra semicolons to if-then-else and while-do’s.
+    case 5:
+      return "Semicolon or comma missing.";
+
+    // Not used
+    case 6:
+      return "";
+
+    // Not used
+    case 7:
+      return "";
+
+    // Not used
+    case 8:
+      return "";
+
+    // Missing a period at the end of the program.
+    case 9:
+      return "Period missing.";
+
+    // Except for the last one in a block, every statement needs to end with a semicolon.
+    case 10:
+      return "Semicolon between statements missing.";
+
+    // You tried to use an undeclared constant, variable, or procedure, or you tried to
+    // access something that is outside of your scope.
+    case 11:
+      return "Undeclared identifier.";
+
+    // You tried to assign a value to a constant or a procedure. Check your variable names.
+    case 12:
+      return "Assignment to constant or procedure is not allowed.";
+
+    // You began a statement with an identifier,   but it wasn’t followed by an assignment
+    // operator (:=).
+    case 13:
+      return "Assignment operator expected.";
+
+    // You used call, but you didn’t include the procedure name.
+    case 14:
+      return "Call must be followed by an identifier.";
+
+    // You tried to call a constant or a variable, which is meaningless.
+    case 15:
+      return "Call of a constant or variable is meaningless.";
+
+    // if [condition] must be followed by then [statement].
+    case 16:
+      return "then expected.";
+
+    // Not used
+    case 17:
+      return "";
+
+    // while [condition] must be followed by do [statement].
+    case 18:
+      return "do expected.";
+
+    // Not used
+    case 19:
+      return "";
+
+    // In a conditional expression, you are missing a relational operator.
+    case 20:
+      return "Relational operator expected.";
+
+    // You cannot use procedures in expressions (since they do not return or represent
+    // values).
+    case 21:
+      return "Expression must not contain a procedure identifier.";
+
+    // Missing the right parenthesis at the end of a factor.
+    case 22:
+      return "Right parenthesis missing.";
+
+    // There is something wrong with a factor used in an expression.
+    case 23:
+      return "The preceding factor cannot begin with this symbol.";
+
+    // Not used
+    case 24:
+      return "";
+
+    // Code generator exceeded the maximum number of lines of code.
+    case 25:
+      return "This number is too large.";
+
+    // You used out, but didn’t specify anything to output.
+    case 26:
+      return "out must be followed by an expression.";
+
+    // You used in, but you didn’t specify what variable to assign it to.
+    case 27:
+      return "in must be followed by an identifier.";
+
+    // Not used
+    case 28:
+      return "";
+
+    // Constants cannot be redefined.
+    case 29:
+      return "Cannot redefine constants.";
 
     // Identifier exceed 11 characters in length
-    case 2:
-        return "Identifier's name is too long.";
+    case 30:
+      return "Identifier's name is too long.";
 
-    // Invalid symbol
-    case 3:
-      return "Invalid symbol found.";
+    // Identifier starts with a number
+    case 31:
+      return "Variable does not start with letter.";
 
     // Unknown error thrown
     default:
@@ -381,6 +495,7 @@ void deleteComments(){
     cleanInputOutput = fopen("cleaninput.txt", "w");
 
     // For each element in the array - 2
+
     for(i = 0; i < MAX_FILE_LENGTH; i++)
     {
         if(rawInput[i] == '/' && rawInput[i + 1] == '*')
@@ -445,65 +560,62 @@ void scan() {
   {
     if ( !isWhiteSpace(cleanInput[counter]) )
     {
-      error = 0;
       // printf("Check: %c\n", cleanInput[counter]);
       // Assume it is an invalid token type
-      // struct token* t = (struct token*)malloc(sizeof(struct token));
-      struct token t;
-      memset(&t, 0, sizeof(struct token));
+      struct token* t = (struct token*)malloc(sizeof(struct token));
 
-      isReservedWord(&t, counter);
-      if ( t.type != nulsym )
+      // I'm probably going to want to change this later one so that
+      // the isReserved and like functions do not return anything and are
+      // void. They are taking in a pointer to the token (t), and returning
+      // a pointer to the exact same location in memory. It's kind of pointless.
+      // It shouldn't affect any changes you make, since token (t) will still
+      // be available. It will be have a line like:
+      // isReserved(t, counter);
+      // instead of the following:
+      t = isReservedWord(t, counter);
+      if ( t->type != nulsym )
       {
-        printf(ANSI_COLOR_GREEN"%s\n"ANSI_COLOR_RESET, t.name);
-        tokenStorage[tokenCount++] = t;
-        counter += getLength(t.name) - 1;
-        continue;
-      }
-      isIdentifier(&t, counter);
-      if ( t.type != nulsym )
-      {
-          if ( t.type == numbersym )
-            printf(ANSI_COLOR_PURPLE"%s\n"ANSI_COLOR_RESET, t.name);
-          else
-            printf(ANSI_COLOR_WHITE"%s\n"ANSI_COLOR_RESET, t.name);
-          tokenStorage[tokenCount++] = t;
-          counter += getLength(t.name) - 1;
-          continue;
-      }
-
-      isSpecialSymbol(&t, counter);
-      if ( t.type != nulsym )
-      {
-        printf(ANSI_COLOR_YELLOW"%s\n"ANSI_COLOR_RESET, t.name);
-        tokenStorage[tokenCount++] = t;
-        counter += getLength(t.name) - 1;
+        printf(ANSI_COLOR_GREEN"%s\n"ANSI_COLOR_RESET, t->name);
+        tokenStorage[tokenCount++] = *t;
+        counter += getLength(t->name) - 1;
+        free(t);
         continue;
       }
 
-      isNumber(&t, counter);
-      if ( t.type != nulsym)
+      t = isSpecialSymbol(t, counter);
+      if ( t->type != nulsym )
       {
-        printf(ANSI_COLOR_PURPLE"%s\n"ANSI_COLOR_RESET, t.name);
-        tokenStorage[tokenCount++] = t;
-        counter += getLength(t.name) - 1;
+        printf(ANSI_COLOR_YELLOW"%s\n"ANSI_COLOR_RESET, t->name);
+        tokenStorage[tokenCount++] = *t;
+        counter += getLength(t->name) - 1;
+        free(t);
         continue;
       }
 
-      // Invalid symbol was encounted
-      error = 3;
-      printf("%c: %s\n", cleanInput[counter], getErrorMessage(error));
-      printf(ANSI_COLOR_REDP"%c\n"ANSI_COLOR_RESET, cleanInput[counter]);
-      t.name[0] = cleanInput[counter];
-      t.type = nulsym;
-      t.id = 0;
-      tokenStorage[tokenCount++] = t;
+      t = isNumber(t, counter);
+      if ( t->type != nulsym)
+      {
+        printf(ANSI_COLOR_PURPLE"%s\n"ANSI_COLOR_RESET, t->name);
+        tokenStorage[tokenCount++] = *t;
+        counter += getLength(t->name) - 1;
+        free(t);
+        continue;
+      }
 
+      t = isIdentifier(t, counter);
+      if ( t->type != nulsym )
+      {
+        printf(ANSI_COLOR_REDP"%s\n"ANSI_COLOR_RESET, t->name);
+        tokenStorage[tokenCount++] = *t;
+        counter += getLength(t->name) - 1;
+        free(t);
+        continue;
+      }
     }
   }
 }
 
-void isReservedWord(struct token* t, int inputPosition) {
+struct token* isReservedWord(struct token* t, int inputPosition) {
   // Create a temporary string to test the current possible token
   char string[20];
   // Initialize the tempString to be empty
@@ -517,7 +629,7 @@ void isReservedWord(struct token* t, int inputPosition) {
   if ( value == 0 )
   {
     t->type = nulsym;
-    return;
+    return t;
   }
 
   // Valid token was found, set its values
@@ -534,7 +646,7 @@ void isReservedWord(struct token* t, int inputPosition) {
   }
 
   // Return the token with all its known values
-  return;
+  return t;
 }
 
 int isReserved(int inputPosition, char* string, int length) {
@@ -571,7 +683,7 @@ int isReserved(int inputPosition, char* string, int length) {
   return isReserved(inputPosition + 1, string, length + 1);
 }
 
-void isNumber(struct token* t, int inputPosition) {
+struct token* isNumber(struct token* t, int inputPosition) {
   // Get the return value of the check if it is a reserved word
   // Also, assume that the number is invalid, so if the string
   // is empty, the first digit will replace the string.
@@ -580,7 +692,10 @@ void isNumber(struct token* t, int inputPosition) {
   // If the token was not a valid number, return the placeholder token
   // with a nulsym type
   if ( value == INVALID_NUM )
-    return;
+  {
+    t->type = nulsym;
+    return t;
+  }
 
   // Valid token was found, set its values
   // A number is stored with an token type of 3
@@ -598,10 +713,18 @@ void isNumber(struct token* t, int inputPosition) {
 
   // Otherwise return the address of the struct that contains all the data about
   // the valid token
-  return;
+  return t;
 }
 
 int isDigit(int inputPosition, int length, int total) {
+  // Although the entire number needs to be tokenized, if it
+  // exceeds five digits in length, we throw an error
+  // if (length > 5)
+  // {
+  //   printf("Number is greater than 5 digits");
+  //   exit(0);
+  // }
+
   // If it's not a number, return the value that's already known
   if ( !(cleanInput[inputPosition] >= 48 && cleanInput[inputPosition] <= 57) )
   {
@@ -623,7 +746,7 @@ int isDigit(int inputPosition, int length, int total) {
   return isDigit(inputPosition + 1, length + 1, total);
 }
 
-void isSpecialSymbol(struct token* t, int inputPosition) {
+struct token* isSpecialSymbol(struct token* t, int inputPosition) {
   // Create a temporary string to test the current possible token
   char string[20];
   // Initialize the tempString to be empty
@@ -637,7 +760,7 @@ void isSpecialSymbol(struct token* t, int inputPosition) {
   if ( value == 0 )
   {
     t->type = nulsym;
-    return;
+    return t;
   }
 
   // Valid token was found, set its values
@@ -657,7 +780,7 @@ void isSpecialSymbol(struct token* t, int inputPosition) {
 
   // Otherwise return the address of the struct that contains all the data about
   // the valid token
-  return;
+  return t;
 }
 
 int isSpecial(int inputPosition, char* string, int length) {
@@ -694,7 +817,7 @@ int isSpecial(int inputPosition, char* string, int length) {
   return isSpecial(inputPosition + 1, string, length + 1);
 }
 
-void isIdentifier(struct token* t, int inputPosition) {
+struct token* isIdentifier(struct token* t, int inputPosition) {
   // Create a temporary string to test the current possible token
   char string[20];
   // Initialize the tempString to be empty
@@ -703,11 +826,12 @@ void isIdentifier(struct token* t, int inputPosition) {
   // Get the return value of the check if it is a reserved word
   char* value = isId(inputPosition, string, 0);
 
-  // If the token was not a valid idenfier, return a null sym
+  // If the token was not a valid reserved word, return null (false condition for
+  // the scan() function.)
   if ( strcmp(value, "") == 0 )
   {
     t->type = nulsym;
-    return;
+    return t;
   }
 
   // Valid token was found, set its values
@@ -720,49 +844,32 @@ void isIdentifier(struct token* t, int inputPosition) {
   // Set the name to the identifier's value
   strcpy(t->name, value);
 
-  // Check if the token is actually a number instead of identifier
-  int tmp = isDigit(inputPosition, 0, INVALID_NUM);
-  char temp[20];
-  sprintf(temp, "%d", tmp);
-  if (strcmp(t->name, temp) == 0 )
-  {
-      t->type = numbersym;
-      if ( getLength(t->name) > 999999999999 )
-      {
-          error = 1;
-          printf("%s: %s\n", t->name, getErrorMessage(error));
-          //   t->type = errsym;
-
-      }
-      return;
-  }
-
-
-  if ( t->name[0] >= 48 && t->name[0] <= 57 )
-  {
-      error = 0;
-      printf("%s: %s\n", t->name, getErrorMessage(error));
-      return;
-  }
-
-  if ( getLength(t->name) > 11 )
-  {
-      error = 2;
-      printf("%s: %s\n", t->name, getErrorMessage(error));
-  }
-
   // Otherwise return the address of the struct that contains all the data about
   // the valid token
-  return;
+  return t;
 }
 
 char* isId(int inputPosition, char* string, int length) {
   // Affix the next letter to the string
   string[length] = cleanInput[inputPosition];
 
+  // If the string doesn't start with a letter or underscore, mark it as an invalid identifier
+  // *** I have a funny feelign this is where we need to throw an error for an id starting
+  // *** with something other than a letter
+  // A - Z || a - z || underscore
+  if ( !((string[0] >= 65 && string[0] <= 90) || ( string[0] >= 97 && string[0] <= 122)) )
+    return string;
+
   // If the current letter is not a letter, underscore, or number, we've reached the
   // end of the possible identifier.
   // A - Z || 0 - 9 || a - z || underscore
+
+  // if(length > 11)
+  // {
+  //   printf("Identifier is greater than 11 characters");
+  //   exit(0);
+  // }
+
   if ( !( /* A - Z */
         (string[length] >= 65 && string[length] <= 90)
         || /* 0 - 9 */
@@ -788,10 +895,9 @@ int getLength(char* string) {
     // keep a count of the number of letters so far until
     // we reach the terminating character \0
     int i = 0;
-    while ( string[i] != '\0')
-    {
+    do
         i++;
-    }
+    while ( string[i] != '\0');
     return i;
 }
 
