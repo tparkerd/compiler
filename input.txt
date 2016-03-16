@@ -10,10 +10,10 @@ begin
 
 	read n;  /* Another comment */
 
-	54s:= n*(n+1)/264866;
+	54s:= n*(n+1)/2;
 	write s;
 
-	spokemonsflkdj:=0;
+	s:=0;
 	i:=n;
 
 	@#%$ &ñ%
