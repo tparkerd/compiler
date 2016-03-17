@@ -22,7 +22,7 @@
 #define MAX_FILE_LENGTH 25000
 #define NUM_IS_DIGIT 10
 #define NUM_RESERVED_WORDS 14
-#define NUM_SPECIAL_SYMBOLS 17
+#define NUM_SPECIAL_SYMBOLS 16
 
 // Errors
 #define NUM_ERROR_TYPES 32
@@ -257,70 +257,65 @@ void initSpecialSymbols() {
   specialSymbols[3].type = slashsym;
   strcpy(specialSymbols[3].name, "/");
 
-  // oddsym
-  specialSymbols[4].id = 8;
-  specialSymbols[4].type = oddsym;
-  strcpy(specialSymbols[4].name, "%");
-
   // eqlsym
-  specialSymbols[5].id = 9;
-  specialSymbols[5].type = eqlsym;
-  strcpy(specialSymbols[5].name, "=");
+  specialSymbols[4].id = 9;
+  specialSymbols[4].type = eqlsym;
+  strcpy(specialSymbols[4].name, "=");
 
   // neqsym
-  specialSymbols[6].id = 10;
-  specialSymbols[6].type = neqsym;
-  strcpy(specialSymbols[6].name, "<>");
+  specialSymbols[5].id = 10;
+  specialSymbols[5].type = neqsym;
+  strcpy(specialSymbols[5].name, "<>");
 
   // lessym
-  specialSymbols[7].id = 11;
-  specialSymbols[7].type = lessym;
-  strcpy(specialSymbols[7].name, "<");
+  specialSymbols[6].id = 11;
+  specialSymbols[6].type = lessym;
+  strcpy(specialSymbols[6].name, "<");
 
   // leqsym
-  specialSymbols[8].id = 12;
-  specialSymbols[8].type = leqsym;
-  strcpy(specialSymbols[8].name, "<=");
+  specialSymbols[7].id = 12;
+  specialSymbols[7].type = leqsym;
+  strcpy(specialSymbols[7].name, "<=");
 
   // gtrsym
-  specialSymbols[9].id = 13;
-  specialSymbols[9].type = gtrsym;
-  strcpy(specialSymbols[9].name, ">");
+  specialSymbols[8].id = 13;
+  specialSymbols[8].type = gtrsym;
+  strcpy(specialSymbols[8].name, ">");
 
   // geqsym
-  specialSymbols[10].id = 14;
-  specialSymbols[10].type = geqsym;
-  strcpy(specialSymbols[10].name, ">=");
+  specialSymbols[9].id = 14;
+  specialSymbols[9].type = geqsym;
+  strcpy(specialSymbols[9].name, ">=");
 
   // lparentsym
-  specialSymbols[11].id = 15;
-  specialSymbols[11].type = lparentsym;
-  strcpy(specialSymbols[11].name, "(");
+  specialSymbols[10].id = 15;
+  specialSymbols[10].type = lparentsym;
+  strcpy(specialSymbols[10].name, "(");
 
   // rparentsym
-  specialSymbols[12].id = 16;
-  specialSymbols[12].type = rparentsym;
-  strcpy(specialSymbols[12].name, ")");
+  specialSymbols[11].id = 16;
+  specialSymbols[11].type = rparentsym;
+  strcpy(specialSymbols[11].name, ")");
 
   // commasym
-  specialSymbols[13].id = 17;
-  specialSymbols[13].type = commasym;
-  strcpy(specialSymbols[13].name, ",");
+  specialSymbols[12].id = 17;
+  specialSymbols[12].type = commasym;
+  strcpy(specialSymbols[12].name, ",");
 
   // semicolonsym
-  specialSymbols[14].id = 18;
-  specialSymbols[14].type = semicolonsym;
-  strcpy(specialSymbols[14].name, ";");
+  specialSymbols[13].id = 18;
+  specialSymbols[13].type = semicolonsym;
+  strcpy(specialSymbols[13].name, ";");
 
   // periodsym
-  specialSymbols[15].id = 19;
-  specialSymbols[15].type = periodsym;
-  strcpy(specialSymbols[15].name, ".");
+  specialSymbols[14].id = 19;
+  specialSymbols[14].type = periodsym;
+  strcpy(specialSymbols[14].name, ".");
 
   // becomessym
-  specialSymbols[16].id = 20;
-  specialSymbols[16].type = becomessym;
-  strcpy(specialSymbols[16].name, ":=");
+  specialSymbols[15].id = 20;
+  specialSymbols[15].type = becomessym;
+  strcpy(specialSymbols[15].name, ":=");
 }
 
 void initTokenStorage() {
