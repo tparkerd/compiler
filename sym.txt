@@ -1,6 +1,6 @@
 /*Symbols that are accepted*/
 
-x y z       /*Ident Sym     2*/
+x y z       /* Ident Sym2 */
 abcdefghijk /*Ident Sym     2*/
 1 2 3       /*Number Sym    3*/
 12345       /*Number Sym    3*/
@@ -16,7 +16,7 @@ abcdefghijk /*Ident Sym     2*/
 >           /*Greater Sym   13*/
 >=          /*Gtr/Eql Sym   14*/
 (           /*LParent Sym   15*/
-)           /*RParent Sym   16*/
+)           /* RPadrent Sym   16 */
 ,           /*Comma Sym     17*/
 ;           /*Semicolon Sym 18*/
 .           /*Period Sym    19*/

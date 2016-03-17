@@ -19,10 +19,10 @@
 #define ANSI_COLOR_PINK          "\x1b[95m"
 #define ANSI_COLOR_CYAN          "\x1b[96m"
 
-#define MAX_FILE_LENGTH 500
+#define MAX_FILE_LENGTH 25000
 #define NUM_IS_DIGIT 10
 #define NUM_RESERVED_WORDS 14
-#define NUM_SPECIAL_SYMBOLS 16
+#define NUM_SPECIAL_SYMBOLS 17
 
 // Errors
 #define NUM_ERROR_TYPES 32
@@ -101,7 +101,6 @@ const char* getErrorMessage(int id);
 void printInfo();
 const char* getName(int i);
 tokenType getType(int i);
-
 
 int main() {
   init();
@@ -238,85 +237,90 @@ void initDigits() {
 }
 
 void initSpecialSymbols() {
-    // plussym
-    specialSymbols[0].id = 4;
-    specialSymbols[0].type = plussym;
-    strcpy(specialSymbols[0].name, "+");
+  // plussym
+  specialSymbols[0].id = 4;
+  specialSymbols[0].type = plussym;
+  strcpy(specialSymbols[0].name, "+");
 
-    // minussym
-    specialSymbols[1].id = 5;
-    specialSymbols[1].type = minussym;
-    strcpy(specialSymbols[1].name, "-");
+  // minussym
+  specialSymbols[1].id = 5;
+  specialSymbols[1].type = minussym;
+  strcpy(specialSymbols[1].name, "-");
 
-    // multsym
-    specialSymbols[2].id = 6;
-    specialSymbols[2].type = multsym;
-    strcpy(specialSymbols[2].name, "*");
+  // multsym
+  specialSymbols[2].id = 6;
+  specialSymbols[2].type = multsym;
+  strcpy(specialSymbols[2].name, "*");
 
-    // slashsym
-    specialSymbols[3].id = 7;
-    specialSymbols[3].type = slashsym;
-    strcpy(specialSymbols[3].name, "/");
+  // slashsym
+  specialSymbols[3].id = 7;
+  specialSymbols[3].type = slashsym;
+  strcpy(specialSymbols[3].name, "/");
 
-    // eqlsym
-    specialSymbols[4].id = 9;
-    specialSymbols[4].type = eqlsym;
-    strcpy(specialSymbols[4].name, "=");
+  // oddsym
+  specialSymbols[4].id = 8;
+  specialSymbols[4].type = oddsym;
+  strcpy(specialSymbols[4].name, "%");
 
-    // neqsym
-    specialSymbols[5].id = 10;
-    specialSymbols[5].type = neqsym;
-    strcpy(specialSymbols[5].name, "<>");
+  // eqlsym
+  specialSymbols[5].id = 9;
+  specialSymbols[5].type = eqlsym;
+  strcpy(specialSymbols[5].name, "=");
 
-    // lessym
-    specialSymbols[6].id = 11;
-    specialSymbols[6].type = lessym;
-    strcpy(specialSymbols[6].name, "<");
+  // neqsym
+  specialSymbols[6].id = 10;
+  specialSymbols[6].type = neqsym;
+  strcpy(specialSymbols[6].name, "<>");
 
-    // leqsym
-    specialSymbols[7].id = 12;
-    specialSymbols[7].type = leqsym;
-    strcpy(specialSymbols[7].name, "<=");
+  // lessym
+  specialSymbols[7].id = 11;
+  specialSymbols[7].type = lessym;
+  strcpy(specialSymbols[7].name, "<");
 
-    // gtrsym
-    specialSymbols[8].id = 13;
-    specialSymbols[8].type = gtrsym;
-    strcpy(specialSymbols[8].name, ">");
+  // leqsym
+  specialSymbols[8].id = 12;
+  specialSymbols[8].type = leqsym;
+  strcpy(specialSymbols[8].name, "<=");
 
-    // geqsym
-    specialSymbols[9].id = 14;
-    specialSymbols[9].type = geqsym;
-    strcpy(specialSymbols[9].name, ">=");
+  // gtrsym
+  specialSymbols[9].id = 13;
+  specialSymbols[9].type = gtrsym;
+  strcpy(specialSymbols[9].name, ">");
 
-    // lparentsym
-    specialSymbols[10].id = 15;
-    specialSymbols[10].type = lparentsym;
-    strcpy(specialSymbols[10].name, "(");
+  // geqsym
+  specialSymbols[10].id = 14;
+  specialSymbols[10].type = geqsym;
+  strcpy(specialSymbols[10].name, ">=");
 
-    // rparentsym
-    specialSymbols[11].id = 16;
-    specialSymbols[11].type = rparentsym;
-    strcpy(specialSymbols[11].name, ")");
+  // lparentsym
+  specialSymbols[11].id = 15;
+  specialSymbols[11].type = lparentsym;
+  strcpy(specialSymbols[11].name, "(");
 
-    // commasym
-    specialSymbols[12].id = 17;
-    specialSymbols[12].type = commasym;
-    strcpy(specialSymbols[12].name, ",");
+  // rparentsym
+  specialSymbols[12].id = 16;
+  specialSymbols[12].type = rparentsym;
+  strcpy(specialSymbols[12].name, ")");
 
-    // semicolonsym
-    specialSymbols[13].id = 18;
-    specialSymbols[13].type = semicolonsym;
-    strcpy(specialSymbols[13].name, ";");
+  // commasym
+  specialSymbols[13].id = 17;
+  specialSymbols[13].type = commasym;
+  strcpy(specialSymbols[13].name, ",");
 
-    // periodsym
-    specialSymbols[14].id = 19;
-    specialSymbols[14].type = periodsym;
-    strcpy(specialSymbols[14].name, ".");
+  // semicolonsym
+  specialSymbols[14].id = 18;
+  specialSymbols[14].type = semicolonsym;
+  strcpy(specialSymbols[14].name, ";");
 
-    // becomessym
-    specialSymbols[15].id = 20;
-    specialSymbols[15].type = becomessym;
-    strcpy(specialSymbols[15].name, ":=");
+  // periodsym
+  specialSymbols[15].id = 19;
+  specialSymbols[15].type = periodsym;
+  strcpy(specialSymbols[15].name, ".");
+
+  // becomessym
+  specialSymbols[16].id = 20;
+  specialSymbols[16].type = becomessym;
+  strcpy(specialSymbols[16].name, ":=");
 }
 
 void initTokenStorage() {
@@ -324,7 +328,7 @@ void initTokenStorage() {
     for (i = 0; i < MAX_FILE_LENGTH; i++)
     {
         tokenStorage[i].id = 0;
-        memset(&tokenStorage[i].name[0], 0, sizeof(tokenStorage[i].name));
+        memset(&tokenStorage[i].name, 0, sizeof(tokenStorage[i].name));
     }
 }
 
@@ -368,34 +372,34 @@ void readRawFile() {
 }
 
 void deleteComments(){
-    int i, j;
-    cleanInputOutput = fopen("cleaninput.txt", "w");
+  int i, j;
+  cleanInputOutput = fopen("cleaninput.txt", "w");
 
-    // For each element in the array - 2
-    for(i = 0; i < MAX_FILE_LENGTH; i++)
+  // For each element in the array - 2
+  for(i = 0; i < MAX_FILE_LENGTH; i++)
+  {
+    if(rawInput[i] == '/' && rawInput[i + 1] == '*')
     {
-        if(rawInput[i] == '/' && rawInput[i + 1] == '*')
-        {
-            j = i + 1;
-            // while( !(rawInput[j] == '*' && rawInput[j + 1] == '/') )
-            while( rawInput[j] != '*' || rawInput[j + 1] != '/' )
-                j++;
+      j = i + 1;
+      // while( !(rawInput[j] == '*' && rawInput[j + 1] == '/') )
+      while( rawInput[j] != '*' || rawInput[j + 1] != '/' )
+          j++;
 
-            i = j + 1;
-            continue;
-        }
-        cleanInput[i] = rawInput[i];
+      i = j + 1;
+      continue;
     }
+    cleanInput[i] = rawInput[i];
+  }
 
-    // Write file contents without comments to output file (cleaninput.txt)
-    for(i = 0; i < MAX_FILE_LENGTH; i++)
-    {
-      // Bug fix: encoding issue where leading NULL characters would cause encoding errors
-      if ( cleanInput[i] == 0 )
-        continue;
-      fprintf(cleanInputOutput, "%c", cleanInput[i]);
-    }
-    fclose(cleanInputOutput);
+  // Write file contents without comments to output file (cleaninput.txt)
+  for(i = 0; i < MAX_FILE_LENGTH; i++)
+  {
+    // Bug fix: encoding issue where leading NULL characters would cause encoding errors
+    if ( cleanInput[i] == 0 )
+      continue;
+    fprintf(cleanInputOutput, "%c", cleanInput[i]);
+  }
+  fclose(cleanInputOutput);
 }
 
 void removeWhiteSpace() {
@@ -445,10 +449,6 @@ void scan() {
       isIdentifier(&t, counter);
       if ( t.type != nulsym )
       {
-        if ( t.type == numbersym )
-        printf(ANSI_COLOR_PURPLE"%s\n"ANSI_COLOR_RESET, t.name);
-        else
-        printf(ANSI_COLOR_WHITE"%s\n"ANSI_COLOR_RESET, t.name);
         tokenStorage[tokenCount++] = t;
         counter += getLength(t.name) - 1;
         continue;
@@ -458,7 +458,6 @@ void scan() {
       isReservedWord(&t, counter);
       if ( t.type != nulsym )
       {
-        printf(ANSI_COLOR_GREEN"%s\n"ANSI_COLOR_RESET, t.name);
         tokenStorage[tokenCount++] = t;
         counter += getLength(t.name) - 1;
         continue;
@@ -468,7 +467,6 @@ void scan() {
       isSpecialSymbol(&t, counter);
       if ( t.type != nulsym )
       {
-        printf(ANSI_COLOR_YELLOW"%s\n"ANSI_COLOR_RESET, t.name);
         tokenStorage[tokenCount++] = t;
         counter += getLength(t.name) - 1;
         continue;
@@ -478,18 +476,12 @@ void scan() {
       isNumber(&t, counter);
       if ( t.type != nulsym )
       {
-        printf(ANSI_COLOR_PURPLE"%s\n"ANSI_COLOR_RESET, t.name);
         tokenStorage[tokenCount++] = t;
         counter += getLength(t.name) - 1;
         continue;
       }
 
-
-
       // Otherwise an invalid symbol was encountered
-      printf(ANSI_COLOR_REDP"%c\n"ANSI_COLOR_RESET, cleanInput[counter]);
-      // memset(&t.name, 0, sizeof(char) * MAX_TOKEN_SPACE);
-      // memset(&t, 0, sizeof(struct token));
       t.name[1] = '\0';
       t.name[0] = cleanInput[counter];
       t.type = errsym;
@@ -499,78 +491,10 @@ void scan() {
   }
 }
 
-void isReservedWord(struct token* t, int inputPosition) {
-  // Create a temporary string to test the current possible token
-  char string[MAX_TOKEN_SPACE];
-  // Initialize the tempString to be empty
-  memset(&string[0], 0, sizeof(string));
-
-  // Get the return value of the check if it is a reserved word
-  int value = isReserved(inputPosition, string, 0);
-
-  // If the token was not a valid reserved word, return null (false condition for
-  // the scan() function.)
-  if ( value == 0 )
-  {
-    t->type = nulsym;
-    return;
-  }
-
-  // Valid token was found, set its values
-  int i;
-  for ( i = 0; i < NUM_RESERVED_WORDS; i++ )
-  {
-    // If the reserved word is found, copy its name over to the struct token
-    if ( reservedWords[i].id == value )
-    {
-      t->id = reservedWords[i].id;
-      strcpy(t->name, reservedWords[i].name);
-      t->type = reservedWords[i].type;
-    }
-  }
-
-  // Return the token with all its known values
-  return;
-}
-
-int isReserved(int inputPosition, char* string, int length) {
-  // Length of string exceeds the max length of all known reserved words
-  // or is an empty string, return false, as it is not a reserved word.
-  if (length > 10)
-    return 0;
-
-  // Affix the next letter to the string
-  string[length] = cleanInput[inputPosition];
-
-  // If the string doesn't start with a letter or underscore, return false
-  // *only check when the string has one character
-  if ( length == 0 )
-    // A - Z || a - z || underscore
-    if ( !((string[0] >= 65 && string[0] <= 90) || ( string[0] >= 97 && string[0] <= 122) || (string[0] == 95)) )
-      return 0;
-
-  // If the current letter is not a letter, underscore, or number, return false
-  // A - Z || 0 - 9 || a - z || underscore
-  if ( !( string[length] >= 97 && string[length] <= 122) )
-    return 0;
-
-  // Check the current string against all known reserved words
-  int i;
-  for (i = 0; i < NUM_RESERVED_WORDS; i++)
-  {
-      // If the current reserved word matches the given value
-      if (strcmp(reservedWords[i].name, string) == 0)
-        // Return the token type as int
-        return reservedWords[i].id;
-  }
-  // Otherwise, add the next letter to the string and try again
-  return isReserved(inputPosition + 1, string, length + 1);
-}
-
 void isIdentifier(struct token* t, int inputPosition) {
   // Create a temporary string to test the current possible token
   char string[MAX_TOKEN_SPACE];
-  // Initialize the tempString to be empty
+  // Initialize the string to be empty
   memset(&string[0], 0, sizeof(string));
 
   // Get the return value of the check if it is a reserved word
@@ -593,30 +517,25 @@ void isIdentifier(struct token* t, int inputPosition) {
   // Set the name to the identifier's value
   strcpy(t->name, value);
 
-  // Check if the token is actually a number instead of identifier
-  char* reserveCheck = (char*)malloc(MAX_TOKEN_SPACE * sizeof(char));
-  int tempId = isReserved(inputPosition, reserveCheck, 0);
-  if ( tempId != 0 )
+
+  // Check if the current identifier is actually a reserved word
+  int i;
+  for (i = 0; i < NUM_RESERVED_WORDS; i++)
   {
-    printf("My id: %d\n", tempId);
-    int i;
-    for (i = 0; i < NUM_RESERVED_WORDS; i++)
+    // If the current reserved word matches the given value
+    if (strcmp(reservedWords[i].name, value) == 0)
     {
-      if ( tempId == reservedWords[i].id )
-      {
-        t->type = getType(tempId);
-        t->id = tempId;
-      }
+      t->type = reservedWords[i].type;
+      t->id = reservedWords[i].id;
+      return;
     }
-    free(reserveCheck);
-    return;
   }
 
 
   char* temp = (char*)malloc(MAX_TOKEN_SPACE * sizeof(char));
   temp = isDigit(inputPosition, temp, 0);
-  // If the length of the string is the same as if it were made up of only
-  // digits, it is safe to assume it is a number
+  // If the identifier is the same string as if it were a number, then
+  // the token is actually a number, so change  the values of the token
   if (strcmp(t->name, temp) == 0 )
   {
     // Set type to number
@@ -693,11 +612,72 @@ char* isId(int inputPosition, char* string, int length) {
   return isId(inputPosition + 1, string, length + 1);
 }
 
+void isReservedWord(struct token* t, int inputPosition) {
+  // Create a temporary string to test the current possible token
+  char string[MAX_TOKEN_SPACE];
+  // Initialize the tempString to be empty
+  memset(&string, 0, sizeof(string));
+
+  // Get the return value of the check if it is a reserved word
+  int value = isReserved(inputPosition, string, 0);
+
+  // If the token was not a valid reserved word, return null (false condition for
+  // the scan() function.)
+  if ( value == 0 )
+  {
+    t->type = nulsym;
+    return;
+  }
+
+  // Valid token was found, set its values
+  int i;
+  for ( i = 0; i < NUM_RESERVED_WORDS; i++ )
+  {
+    // If the reserved word is found, copy its name over to the struct token
+    if ( reservedWords[i].id == value )
+    {
+      t->id = reservedWords[i].id;
+      strcpy(t->name, reservedWords[i].name);
+      t->type = reservedWords[i].type;
+    }
+  }
+
+  // Return the token with all its known values
+  return;
+}
+
+int isReserved(int inputPosition, char* string, int length) {
+  // Length of string exceeds the max length of all known reserved words
+  // or is an empty string, return false, as it is not a reserved word.
+  if (length > 10)
+    return 0;
+
+  // Affix the next letter to the string
+  string[length] = cleanInput[inputPosition];
+
+  // Check if the first character is lowercase and a letter
+  // a - z
+  if ( !( string[length] >= 97 && string[length] <= 122) )
+    return 0;
+
+  // Check the current string against all known reserved words
+  int i;
+  for (i = 0; i < NUM_RESERVED_WORDS; i++)
+  {
+    // If the current reserved word matches the given value
+    if (strcmp(reservedWords[i].name, string) == 0)
+      // Return the token type as int
+      return reservedWords[i].id;
+  }
+  // Otherwise, add the next letter to the string and try again
+  return isReserved(inputPosition + 1, string, length + 1);
+}
+
 void isSpecialSymbol(struct token* t, int inputPosition) {
   // Create a temporary string to test the current possible token
   char string[MAX_TOKEN_SPACE];
   // Initialize the tempString to be empty
-  memset(&string[0], 0, sizeof(string));
+  memset(&string, 0, sizeof(string));
 
   // Get the return value of the check if it is a reserved word
   int value = isSpecial(inputPosition, string, 0);
@@ -739,17 +719,13 @@ int isSpecial(int inputPosition, char* string, int length) {
   // Affix the next letter to the string
   string[length] = cleanInput[inputPosition];
 
-  // If the string doesn't start with a special character, return false
-  // *only check when the string has one character -- not necessary though
-  if ( length == 0 )
-    // ( ) * + ,  - . / OR : ; < = >
-    if ( !( (string[0] >= 40 && string[0] <= 47) || ( string[0] >= 58 && string[0] <= 62) ) )
-      return 0;
-
   // If the current character is NOT a special character
-  // ( ) * + ,  - . / OR : ; < = >
-  if ( !( (string[length] >= 40 && string[length] <= 47) || (string[length] >= 58 && string[length] <= 62) ) )
+  // ( ) * + ,  - . / OR : ; < = > OR %
+  if ( !( (string[length] >= 40 && string[length] <= 47) || (string[length] >= 58 && string[length] <= 62) || (string[length] == 37) ) )
     return 0;
+
+  if ( (cleanInput[inputPosition + 1] >= 40 && cleanInput[inputPosition + 1] <= 47) || (cleanInput[inputPosition + 1] >= 58 && cleanInput[inputPosition + 1] <= 62) || (cleanInput[inputPosition + 1] == 37) )
+    return isSpecial(inputPosition + 1, string, length + 1);
 
   // Check the current string against all known reserved words
   int i;
@@ -768,7 +744,7 @@ void isNumber(struct token* t, int inputPosition) {
   // Create a temporary string to test the current possible token
   char string[MAX_TOKEN_SPACE];
   // Initialize the tempString to be empty
-  memset(&string[0], 0, sizeof(string));
+  memset(&string, 0, sizeof(string));
 
   char* value = isDigit(inputPosition, string, 0);
 
@@ -860,7 +836,7 @@ void writeLexemeList() {
         else if(tokenStorage[i].id == 3) {
             fprintf(lexemeList, "%d %s ", tokenStorage[i].id, tokenStorage[i].name);
         }
-        else
+        else if(tokenStorage[i].id >= 0 && tokenStorage[i].id <= 33)
             fprintf(lexemeList, "%d ", tokenStorage[i].id);
     }
     fclose(lexemeList);
@@ -989,6 +965,7 @@ const char* getName(int i) {
   switch (i)
   {
     case 1:
+      return "nulsym";
     case 2:
       return "identsym";
     case 3:

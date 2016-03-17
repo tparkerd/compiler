@@ -1,4 +1,9 @@
-/*Error #1
-Variable does not start with a letter.*/
+/*Tricky Test
+This test attempts to test whether or not the Lexical Analyzer
+treats tricky cases correctly.*/
 
-2variable
+,.
+
+x:=y;
+
+varx
