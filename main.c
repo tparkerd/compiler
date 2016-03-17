@@ -446,6 +446,7 @@ void scan() {
       // printf("Check: %c\n", cleanInput[counter]);
       // Assume it is an invalid token type
       struct token t;
+      memset(&t, 0, sizeof(struct token));
 
       // Check if the current character starts a reserved word
       isReservedWord(&t, counter);
@@ -501,7 +502,7 @@ void scan() {
       t.name[1] = '\0';
       t.name[0] = cleanInput[counter];
       t.type = errsym;
-      t.id = 0;
+      t.id = 37;
       tokenStorage[tokenCount++] = t;
     }
   }
@@ -617,7 +618,7 @@ void isIdentifier(struct token* t, int inputPosition) {
         error = 1;
         printf(ANSI_COLOR_DARKRED"%s: "ANSI_COLOR_RESET, getErrorMessage(error));
         t->type = errsym;
-        // t->id = -1;
+        t->id = 35;
     }
     // Free up the memory for the temp string
     free(temp);
@@ -639,6 +640,7 @@ void isIdentifier(struct token* t, int inputPosition) {
         printf(ANSI_COLOR_DARKRED"%s: "ANSI_COLOR_RESET, getErrorMessage(error));
         // Free up the memory for the temp string
         t->type = errsym;
+        t->id = 34;
         free(temp);
         return;
       }
@@ -647,6 +649,7 @@ void isIdentifier(struct token* t, int inputPosition) {
   {
       error = 2;
       t->type = errsym;
+      t->id = 36;
       printf(ANSI_COLOR_DARKRED"%s: "ANSI_COLOR_RESET, getErrorMessage(error));
   }
 
@@ -901,7 +904,7 @@ void printInfo() {
   for ( count = 0; count < tokenCount; count++ )
   {
     struct token t = tokenStorage[count];
-    if ( t.id >= 21 )
+    if ( t.id >= 21 && t.id <= 33 )
       printf("%-20d%-20d%-20s%-20s\n", count + 1, t.id, t.name, getName(t.id));
   }
 
@@ -938,7 +941,7 @@ void printInfo() {
   for ( count = 0; count < tokenCount; count++ )
   {
     struct token t = tokenStorage[count];
-    if ( t.id >= 21 )
+    if ( t.id >= 4 && t.id <= 20 )
       printf("%-20d%-20d%-20s%-20s\n", count + 1, t.id, t.name, getName(t.id));
   }
 
@@ -964,18 +967,86 @@ void printInfo() {
 }
 
 const char* getName(int i) {
-  int j;
-  for (j = 0; j < NUM_RESERVED_WORDS; j++)
+  switch (i)
   {
-    if (reservedWords[j].id == i)
-      return reservedWords[j].name;
+    case 1:
+    case 2:
+      return "identsym";
+    case 3:
+      return "numbersym";
+    case 4:
+      return "plussym";
+    case 5:
+      return "minussym";
+    case 6:
+      return "multsym";
+    case 7:
+      return "slashsym";
+    case 8:
+      return "oddsym";
+    case 9:
+      return "eqlsym";
+    case 10:
+      return "neqsym";
+    case 11:
+      return "lessym";
+    case 12:
+      return "leqsym";
+    case 13:
+      return "gtrsym";
+    case 14:
+      return "geqsym";
+    case 15:
+      return "lparentsym";
+    case 16:
+      return "rparentsym";
+    case 17:
+      return "commasym";
+    case 18:
+      return "semicolonsym";
+    case 19:
+      return "periodsym";
+    case 20:
+      return "becomessym";
+    case 21:
+      return "beginsym";
+    case 22:
+      return "endsym";
+    case 23:
+      return "ifsym";
+    case 24:
+      return "thensym";
+    case 25:
+      return "whilesym";
+    case 26:
+      return "dosym";
+    case 27:
+      return "callsym";
+    case 28:
+      return "constsym";
+    case 29:
+      return "varsym";
+    case 30:
+      return "procsym";
+    case 31:
+      return "writesym";
+    case 32:
+      return "readsym";
+    case 33:
+      return "elsesym";
+    case 34:
+      return "errsym";
+    case 35:
+      return "errsym";
+    case 36:
+      return "errsym";
+    case 37:
+      return "errsym";
+    case 38:
+      return "errsym";
+    default:
+      return "-";
   }
-
-  for (j = 0; j < NUM_SPECIAL_SYMBOLS; j++)
-    if(specialSymbols[j].id == i)
-      return specialSymbols[j].name;
-
-  return (char*)"";
 }
 
 int isWhiteSpace(char c) {
