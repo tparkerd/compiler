@@ -449,7 +449,7 @@ void scan() {
 
       // Check if the current character starts a reserved word
       isReservedWord(&t, counter);
-      if ( t.type != errsym )
+      if ( t.type != nulsym )
       {
         printf(ANSI_COLOR_GREEN"%s\n"ANSI_COLOR_RESET, t.name);
         tokenStorage[tokenCount++] = t;
@@ -459,7 +459,7 @@ void scan() {
 
       // Check if the current character starts an identifier
       isIdentifier(&t, counter);
-      if ( t.type != errsym )
+      if ( t.type != nulsym )
       {
         if ( t.type == numbersym )
           printf(ANSI_COLOR_PURPLE"%s\n"ANSI_COLOR_RESET, t.name);
@@ -472,7 +472,7 @@ void scan() {
 
       // Check if the current character starts a special symbol
       isSpecialSymbol(&t, counter);
-      if ( t.type != errsym )
+      if ( t.type != nulsym )
       {
         printf(ANSI_COLOR_YELLOW"%s\n"ANSI_COLOR_RESET, t.name);
         tokenStorage[tokenCount++] = t;
@@ -482,7 +482,7 @@ void scan() {
 
       // Check if the current character starts a number
       isNumber(&t, counter);
-      if ( t.type != errsym )
+      if ( t.type != nulsym )
       {
         printf(ANSI_COLOR_PURPLE"%s\n"ANSI_COLOR_RESET, t.name);
         tokenStorage[tokenCount++] = t;
@@ -490,17 +490,19 @@ void scan() {
         continue;
       }
 
+
+
       // Otherwise an invalid symbol was encountered
       error = 3;
       printf(ANSI_COLOR_DARKRED"%s: "ANSI_COLOR_RESET, getErrorMessage(error));
       printf(ANSI_COLOR_REDP"%c\n"ANSI_COLOR_RESET, cleanInput[counter]);
       // memset(&t.name, 0, sizeof(char) * MAX_TOKEN_SPACE);
+      // memset(&t, 0, sizeof(struct token));
       t.name[1] = '\0';
       t.name[0] = cleanInput[counter];
       t.type = errsym;
       t.id = 0;
       tokenStorage[tokenCount++] = t;
-
     }
   }
 }
@@ -518,7 +520,7 @@ void isReservedWord(struct token* t, int inputPosition) {
   // the scan() function.)
   if ( value == 0 )
   {
-    t->type = errsym;
+    t->type = nulsym;
     return;
   }
 
@@ -585,7 +587,7 @@ void isIdentifier(struct token* t, int inputPosition) {
   // If the token was not a valid idenfier, return a null sym
   if ( strcmp(value, "") == 0 )
   {
-    t->type = errsym;
+    t->type = nulsym;
     return;
   }
 
@@ -615,7 +617,7 @@ void isIdentifier(struct token* t, int inputPosition) {
         error = 1;
         printf(ANSI_COLOR_DARKRED"%s: "ANSI_COLOR_RESET, getErrorMessage(error));
         t->type = errsym;
-        t->id = -1;
+        // t->id = -1;
     }
     // Free up the memory for the temp string
     free(temp);
@@ -636,6 +638,7 @@ void isIdentifier(struct token* t, int inputPosition) {
         error = 0;
         printf(ANSI_COLOR_DARKRED"%s: "ANSI_COLOR_RESET, getErrorMessage(error));
         // Free up the memory for the temp string
+        t->type = errsym;
         free(temp);
         return;
       }
@@ -643,6 +646,7 @@ void isIdentifier(struct token* t, int inputPosition) {
   if ( getLength(t->name) > 11 )
   {
       error = 2;
+      t->type = errsym;
       printf(ANSI_COLOR_DARKRED"%s: "ANSI_COLOR_RESET, getErrorMessage(error));
   }
 
@@ -693,7 +697,7 @@ void isSpecialSymbol(struct token* t, int inputPosition) {
   // the scan() function.)
   if ( value == 0 )
   {
-    t->type = errsym;
+    t->type = nulsym;
     return;
   }
 
@@ -763,7 +767,7 @@ void isNumber(struct token* t, int inputPosition) {
   // with a errsym type
   if ( getLength(value) == 0 )
   {
-    t->type = errsym;
+    t->type = nulsym;
     return;
   }
 
@@ -849,7 +853,7 @@ void printInfo() {
   int cNumbers = 0;
   int cReservedWords = 0;
   int cSpecialSymbols = 0;
-  int cInvalidSymbols = 0;
+  // int cInvalidSymbols = 0;
 
 
   // Count things!
@@ -868,32 +872,32 @@ void printInfo() {
         cSpecialSymbols++;
       else if( t.id >= 21 )
         cReservedWords++;
-      else
-        cInvalidSymbols++;
     }
+    else
+      cErrors++;
 
   }
 
-  printf("\n________________________________________________________________\n");
-  printf("0000000000000000000000000000000000000000000000000000000000000000\n");
-  printf("00000        0000        000   000    0000   000           00000\n");
-  printf("00000   000   000   00   000   000      00   0000000   000000000\n");
-  printf("00000        0000       0000   000   0   0   0000000   000000000\n");
-  printf("00000   000000000   000  000   000   000     0000000   000000000\n");
-  printf("00000   000000000   000  000   000   00000   0000000   000000000\n");
-  printf("0000000000000000000000000000000000000000000000000000000000000000\n");
-  printf("\n");
+  // printf("\n________________________________________________________________\n");
+  // printf("0000000000000000000000000000000000000000000000000000000000000000\n");
+  // printf("00000        0000        000   000    0000   000           00000\n");
+  // printf("00000   000   000   00   000   000      00   0000000   000000000\n");
+  // printf("00000        0000       0000   000   0   0   0000000   000000000\n");
+  // printf("00000   000000000   000  000   000   000     0000000   000000000\n");
+  // printf("00000   000000000   000  000   000   00000   0000000   000000000\n");
+  // printf("0000000000000000000000000000000000000000000000000000000000000000\n");
+  // printf("\n");
   printf("________________________________________________________________________________________________________________________\n\n");
-  printf("%-15s%-15s%-15s%-15s%-15s%-15s%-15s%-15s\n", "Total", "Valid", "Error", "Identifier", "Number", "Reserved", "Special Sym", "Invalid Sym");
+  printf("%-15s%-15s%-15s%-15s%-15s%-15s%-15s\n", "Total", "Valid", "Error", "Identifier", "Number", "Reserved", "Special Sym");
   printf("________________________________________________________________________________________________________________________\n");
-  printf("%-15d%-15d%-15d%-15d%-15d%-15d%-15d%-15d\n", cTokens, cValidTokens, cErrors, cIDs, cNumbers, cReservedWords, cSpecialSymbols, cInvalidSymbols);
+  printf("%-15d%-15d%-15d%-15d%-15d%-15d%-15d\n", cTokens, cValidTokens, cErrors, cIDs, cNumbers, cReservedWords, cSpecialSymbols);
 
 
   // Display all reserved words
   printf("__________________________________________________________________\n\n");
   printf("Reserved Words\n");
   printf("__________________________________________________________________\n");
-  printf("%-20s%-20s%-20s%-20s\n", "#", "ID", "Name", "Type");
+  printf(ANSI_COLOR_GREEN"%-20s%-20s%-20s%-20s\n"ANSI_COLOR_RESET, "#", "ID", "Name", "Type");
   for ( count = 0; count < tokenCount; count++ )
   {
     struct token t = tokenStorage[count];
@@ -905,7 +909,7 @@ void printInfo() {
   printf("__________________________________________________________________\n\n");
   printf("Identifiers\n");
   printf("__________________________________________________________________\n");
-  printf("%-20s%-20s%-20s%-20s\n", "#", "ID", "Name", "Type");
+  printf(ANSI_COLOR_GREEN"%-20s%-20s%-20s%-20s\n"ANSI_COLOR_RESET, "#", "ID", "Name", "Type");
   for ( count = 0; count < tokenCount; count++ )
   {
     struct token t = tokenStorage[count];
@@ -918,7 +922,7 @@ void printInfo() {
   printf("Numbers\n");
   printf("__________________________________________________________________\n");
 
-  printf("%-20s%-20s%-20s%-20s\n", "#", "ID", "Name", "Type");
+  printf(ANSI_COLOR_GREEN"%-20s%-20s%-20s%-20s\n"ANSI_COLOR_RESET, "#", "ID", "Name", "Type");
   for ( count = 0; count < tokenCount; count++ )
   {
     struct token t = tokenStorage[count];
@@ -930,7 +934,7 @@ void printInfo() {
   printf("__________________________________________________________________\n\n");
   printf("Special Symbols\n");
   printf("__________________________________________________________________\n");
-  printf("%-20s%-20s%-20s%-20s\n", "#", "ID", "Name", "Type");
+  printf(ANSI_COLOR_GREEN"%-20s%-20s%-20s%-20s\n"ANSI_COLOR_RESET, "#", "ID", "Name", "Type");
   for ( count = 0; count < tokenCount; count++ )
   {
     struct token t = tokenStorage[count];
@@ -943,7 +947,7 @@ void printInfo() {
   printf("Errors & Invalid Symbols\n");
   printf("__________________________________________________________________\n");
 
-  printf("%-20s%-20s%-20s%-20s\n", "#", "ID", "Name", "Type");
+  printf(ANSI_COLOR_GREEN"%-20s%-20s%-20s%-20s\n"ANSI_COLOR_RESET, "#", "ID", "Name", "Type");
   for ( count = 0; count < tokenCount; count++ )
   {
     struct token t = tokenStorage[count];
@@ -959,17 +963,20 @@ void printInfo() {
   printf("\n\n\n\n\n\n");
 }
 
-const char* getName(int i)
-{
-  switch (i)
+const char* getName(int i) {
+  int j;
+  for (j = 0; j < NUM_RESERVED_WORDS; j++)
   {
-
-    default:
-      return "-";
+    if (reservedWords[j].id == i)
+      return reservedWords[j].name;
   }
+
+  for (j = 0; j < NUM_SPECIAL_SYMBOLS; j++)
+    if(specialSymbols[j].id == i)
+      return specialSymbols[j].name;
+
+  return (char*)"";
 }
-
-
 
 int isWhiteSpace(char c) {
     if ( (c == 0) || (c >= 9 && c <= 13) || (c == 32) )
