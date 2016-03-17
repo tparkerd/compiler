@@ -28,7 +28,7 @@
 #define NUM_ERROR_TYPES 32
 #define MAX_VARIABLE_LENGTH 11
 #define MAX_NUM_LENGTH 5
-#define MAX_TOKEN_SPACE 20
+#define MAX_TOKEN_SPACE 50
 
 typedef enum{
   nulsym = 1, identsym, numbersym, plussym, minussym, multsym, slashsym, oddsym,
@@ -39,7 +39,7 @@ typedef enum{
 
 typedef struct token {
     int id;
-    char name[50];
+    char name[MAX_TOKEN_SPACE];
     tokenType type;
 } token;
 
