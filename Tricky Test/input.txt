@@ -3,8 +3,8 @@ This test attempts to test whether or not the Lexical Analyzer
 treats tricky cases correctly.*/
 
 ,.
-var
-const
+
 x:=y;
+
 constant
 varx

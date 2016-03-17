@@ -100,6 +100,7 @@ int getLength(char* string);
 const char* getErrorMessage(int id);
 void printInfo();
 const char* getName(int i);
+tokenType getType(int i);
 
 
 int main() {
@@ -440,24 +441,24 @@ void scan() {
       struct token t;
       memset(&t, 0, sizeof(struct token));
 
-      // Check if the current character starts a reserved word
-      isReservedWord(&t, counter);
-      if ( t.type != nulsym )
-      {
-        printf(ANSI_COLOR_GREEN"%s\n"ANSI_COLOR_RESET, t.name);
-        tokenStorage[tokenCount++] = t;
-        counter += getLength(t.name) - 1;
-        continue;
-      }
-
       // Check if the current character starts an identifier
       isIdentifier(&t, counter);
       if ( t.type != nulsym )
       {
         if ( t.type == numbersym )
-          printf(ANSI_COLOR_PURPLE"%s\n"ANSI_COLOR_RESET, t.name);
+        printf(ANSI_COLOR_PURPLE"%s\n"ANSI_COLOR_RESET, t.name);
         else
-          printf(ANSI_COLOR_WHITE"%s\n"ANSI_COLOR_RESET, t.name);
+        printf(ANSI_COLOR_WHITE"%s\n"ANSI_COLOR_RESET, t.name);
+        tokenStorage[tokenCount++] = t;
+        counter += getLength(t.name) - 1;
+        continue;
+      }
+
+      // Check if the current character starts a reserved word
+      isReservedWord(&t, counter);
+      if ( t.type != nulsym )
+      {
+        printf(ANSI_COLOR_GREEN"%s\n"ANSI_COLOR_RESET, t.name);
         tokenStorage[tokenCount++] = t;
         counter += getLength(t.name) - 1;
         continue;
@@ -593,6 +594,24 @@ void isIdentifier(struct token* t, int inputPosition) {
   strcpy(t->name, value);
 
   // Check if the token is actually a number instead of identifier
+  char* reserveCheck = (char*)malloc(MAX_TOKEN_SPACE * sizeof(char));
+  int tempId = isReserved(inputPosition, reserveCheck, 0);
+  if ( tempId != 0 )
+  {
+    int i;
+    for (i = 0; i < NUM_RESERVED_WORDS; i++)
+    {
+      if ( tempId == reservedWords[i].id )
+      {
+        t->type = getType(tempId);
+        t->id = tempId;
+      }
+    }
+    free(reserveCheck);
+    return;
+  }
+
+
   char* temp = (char*)malloc(MAX_TOKEN_SPACE * sizeof(char));
   temp = isDigit(inputPosition, temp, 0);
   // If the length of the string is the same as if it were made up of only
@@ -1045,6 +1064,88 @@ const char* getName(int i) {
       return "errsym";
     default:
       return "-";
+  }
+}
+
+tokenType getType(int i) {
+  switch (i)
+  {
+    case 2:
+      return identsym;
+    case 3:
+      return numbersym;
+    case 4:
+      return plussym;
+    case 5:
+      return minussym;
+    case 6:
+      return multsym;
+    case 7:
+      return slashsym;
+    case 8:
+      return oddsym;
+    case 9:
+      return eqlsym;
+    case 10:
+      return neqsym;
+    case 11:
+      return lessym;
+    case 12:
+      return leqsym;
+    case 13:
+      return gtrsym;
+    case 14:
+      return geqsym;
+    case 15:
+      return lparentsym;
+    case 16:
+      return rparentsym;
+    case 17:
+      return commasym;
+    case 18:
+      return semicolonsym;
+    case 19:
+      return periodsym;
+    case 20:
+      return becomessym;
+    case 21:
+      return beginsym;
+    case 22:
+      return endsym;
+    case 23:
+      return ifsym;
+    case 24:
+      return thensym;
+    case 25:
+      return whilesym;
+    case 26:
+      return dosym;
+    case 27:
+      return callsym;
+    case 28:
+      return constsym;
+    case 29:
+      return varsym;
+    case 30:
+      return procsym;
+    case 31:
+      return writesym;
+    case 32:
+      return readsym;
+    case 33:
+      return elsesym;
+    case 34:
+      return errsym;
+    case 35:
+      return errsym;
+    case 36:
+      return errsym;
+    case 37:
+      return errsym;
+    case 38:
+      return errsym;
+    default:
+      return nulsym;
   }
 }
 

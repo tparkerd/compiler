@@ -464,25 +464,25 @@ void scan() {
       // Assume it is an invalid token type
       struct token t;
 
-      // Check if the current character starts a reserved word
-      isReservedWord(&t, counter);
-      if ( t.type != errsym )
+      // Check if the current character starts an identifier
+      isIdentifier(&t, counter);
+      if ( t.type != nulsym )
       {
-        printf(ANSI_COLOR_GREEN"%s\n"ANSI_COLOR_RESET, t.name);
+        if ( t.type == numbersym )
+        printf(ANSI_COLOR_PURPLE"%s\n"ANSI_COLOR_RESET, t.name);
+        else
+        printf(ANSI_COLOR_WHITE"%s\n"ANSI_COLOR_RESET, t.name);
         tokenStorage[tokenCount++] = t;
         counter += getLength(t.name) - 1;
         printf("%d\n", t.id);
         continue;
       }
 
-      // Check if the current character starts an identifier
-      isIdentifier(&t, counter);
-      if ( t.type != nulsym )
+      // Check if the current character starts a reserved word
+      isReservedWord(&t, counter);
+      if ( t.type != errsym )
       {
-        if ( t.type == numbersym )
-          printf(ANSI_COLOR_PURPLE"%s\n"ANSI_COLOR_RESET, t.name);
-        else
-          printf(ANSI_COLOR_WHITE"%s\n"ANSI_COLOR_RESET, t.name);
+        printf(ANSI_COLOR_GREEN"%s\n"ANSI_COLOR_RESET, t.name);
         tokenStorage[tokenCount++] = t;
         counter += getLength(t.name) - 1;
         printf("%d\n", t.id);

@@ -1,0 +1,4 @@
+/*Error #2
+Number too long (5 digits)*/
+
+123456
