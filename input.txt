@@ -3,14 +3,14 @@
 	2. The famous n(n+1)/2 formula.
 */
 
-const loop_end=0;
+const looooooooop_end!=0;
 var i, n, s;
 
 begin
 
 	read n;
 
-	s:= n*(n+1)/2;
+	1s:= n*(n+1)/2;
 	write s;
 
 	leadingZero:=000000000001;
