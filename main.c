@@ -598,6 +598,7 @@ void isIdentifier(struct token* t, int inputPosition) {
   int tempId = isReserved(inputPosition, reserveCheck, 0);
   if ( tempId != 0 )
   {
+    printf("My id: %d\n", tempId);
     int i;
     for (i = 0; i < NUM_RESERVED_WORDS; i++)
     {
