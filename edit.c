@@ -343,6 +343,31 @@ void initTokenStorage() {
     }
 }
 
+// const char* getErrorMessage(int id) {
+//   switch (id)
+//   {
+//     // Identifier starts with a number
+//     case 0:
+//       return "Variable does not start with letter";
+
+//     // Number exceeds five digits
+//     case 1:
+//       return "Number should not exceed 5 digits in length";
+
+//     // Identifier exceed 11 characters in length
+//     case 2:
+//         return "Identifier's name is too long";
+
+//     // Invalid symbol
+//     case 3:
+//       return "Invalid symbol found";
+
+//     // Unknown error thrown
+//     default:
+//       return "";
+//   }
+// }
+
 void read() {
   readRawFile();
   deleteComments();
@@ -446,12 +471,13 @@ void scan() {
         printf(ANSI_COLOR_GREEN"%s\n"ANSI_COLOR_RESET, t.name);
         tokenStorage[tokenCount++] = t;
         counter += getLength(t.name) - 1;
+        printf("%d\n", t.id);
         continue;
       }
 
       // Check if the current character starts an identifier
       isIdentifier(&t, counter);
-      if ( t.type != errsym )
+      if ( t.type != nulsym )
       {
         if ( t.type == numbersym )
           printf(ANSI_COLOR_PURPLE"%s\n"ANSI_COLOR_RESET, t.name);
@@ -459,6 +485,7 @@ void scan() {
           printf(ANSI_COLOR_WHITE"%s\n"ANSI_COLOR_RESET, t.name);
         tokenStorage[tokenCount++] = t;
         counter += getLength(t.name) - 1;
+        printf("%d\n", t.id);
         continue;
       }
 
@@ -469,8 +496,10 @@ void scan() {
         printf(ANSI_COLOR_YELLOW"%s\n"ANSI_COLOR_RESET, t.name);
         tokenStorage[tokenCount++] = t;
         counter += getLength(t.name) - 1;
+        printf("%d\n", t.id);
         continue;
       }
+
 
       // Check if the current character starts a number
       isNumber(&t, counter);
@@ -479,23 +508,44 @@ void scan() {
         printf(ANSI_COLOR_PURPLE"%s\n"ANSI_COLOR_RESET, t.name);
         tokenStorage[tokenCount++] = t;
         counter += getLength(t.name) - 1;
+        printf("%d\n", t.id);
         continue;
       }
+
+      // t.type = errsym;
+      // isSpecialSymbol(&t, counter);
+      // if ( t.type == errsym )
+      // {
+      //   t.id = 37;
+      //   //strcpy(t.name, );
+      //   printf(ANSI_COLOR_YELLOW"%s\n"ANSI_COLOR_RESET, t.name);
+      //   tokenStorage[tokenCount++] = t;
+      //   counter += getLength(t.name) - 1;
+      //   continue;
+      // }
 
       // Otherwise an invalid symbol was encountered
       //error = 3;
       //printf(ANSI_COLOR_DARKRED"%s: "ANSI_COLOR_RESET, getErrorMessage(error));
-      printf(ANSI_COLOR_REDP"%s\n"ANSI_COLOR_RESET, t.name);
-      // t->name = 3;
-
-      // t.type = errsym;
-      // t.id = 37;
+      // printf(ANSI_COLOR_REDP"%s\n"ANSI_COLOR_RESET, t.name);
+      // // t->name = 3;
+      memset(&t, 0, sizeof(t));
+      t.name[0] = cleanInput[counter];
+      //counter += 1;
+      t.type = errsym;
+      t.id = 37;
+      //strcpy(t.name, isError[3].name);
       tokenStorage[tokenCount++] = t;
       counter += getLength(t.name) - 1;
+      printf("%d\n", t.id);
       continue;
     }
   }
 }
+
+// void isError(struct token *t, int inputPosition){
+
+// }
 
 void isReservedWord(struct token* t, int inputPosition) {
   // Create a temporary string to test the current possible token
@@ -627,12 +677,17 @@ void isSpecialSymbol(struct token* t, int inputPosition) {
   // the scan() function.)
   if ( value == 0 )
   {
+    memset(&string[0], 0, sizeof(string));
+    //t->id = value;
     t->type = errsym;
+    //t->id = 37;
     return;
   }
 
   // Valid token was found, set its values
   t->id = value;
+
+
 
   // Get the name of the reserved word
   int i;
@@ -697,7 +752,7 @@ void isIdentifier(struct token* t, int inputPosition) {
   // If the token was not a valid idenfier, return a null sym
   if ( strcmp(value, "") == 0 )
   {
-    t->type = errsym;
+    t->type = nulsym;
     return;
   }
 

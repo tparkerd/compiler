@@ -39,7 +39,7 @@ typedef enum{
 
 typedef struct token {
     int id;
-    char name[20];
+    char name[50];
     tokenType type;
 } token;
 
@@ -119,6 +119,7 @@ void init() {
   initReservedWords();
   initSpecialSymbols();
   initTokenStorage();
+  initError();
 }
 
 void initReservedWords() {
@@ -803,13 +804,26 @@ void writeLexemeTable() {
     int i;
     lexemeTable = fopen("lexemetable.txt", "w");
     fprintf(lexemeTable, "%-15s%s", "Lexeme\t", "Token Type\n");
-    printf("%-15s%s", "Lexeme\t", "Token Type\n");
+    //printf("%-15s%s", "Lexeme\t", "Token Type\n");
     for (i = 0; i < counter; i++)
     {
         if ( strcmp(tokenStorage[i].name, "") == 0 )
           continue;
-        printf("%-15s\t%-d\n", tokenStorage[i].name, tokenStorage[i].id);
-        fprintf(lexemeTable, "%-15s\t%-d\n", tokenStorage[i].name, tokenStorage[i].id);
+        //printf("%-15s\t%-d\n", tokenStorage[i].name, tokenStorage[i].id);
+
+        if(tokenStorage[i].id >= 0 && tokenStorage[i].id <= 33)
+          fprintf(lexemeTable, "%-15s\t%-d\n", tokenStorage[i].name, tokenStorage[i].id);
+    }
+    for(i = 0; i < counter; i++)
+    {
+        if(tokenStorage[i].id == 34)
+          fprintf(lexemeTable, "%-15s\t%s\n", tokenStorage[i].name, isError[0].name);
+        else if(tokenStorage[i].id == 35)
+          fprintf(lexemeTable, "%-15s\t%s\n", tokenStorage[i].name, isError[1].name);
+        else if(tokenStorage[i].id == 36)
+          fprintf(lexemeTable, "%-15s\t%s\n", tokenStorage[i].name, isError[2].name);
+        else if(tokenStorage[i].id == 37)
+          fprintf(lexemeTable, "%-15s\t%s\n", tokenStorage[i].name, isError[3].name);
     }
     fclose(lexemeTable);
 }
