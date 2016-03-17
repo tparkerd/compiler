@@ -6,7 +6,7 @@
 const looooooooop_end!=0;
 var i, n, s;
 
-begin
+begin !
 
 	read n;
 
