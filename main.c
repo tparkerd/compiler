@@ -44,11 +44,11 @@ typedef struct token {
 } token;
 
 // Global Variables
-
 // Input file: input.txt
 char rawInput[MAX_FILE_LENGTH];
 char cleanInput[MAX_FILE_LENGTH];
 char textInput[MAX_FILE_LENGTH];
+
 // Output file: cleaninput.txt
 FILE* cleanInputOutput;
 FILE* lexemeTable;
@@ -57,6 +57,7 @@ FILE* lexemeList;
 struct token digit[MAX_FILE_LENGTH];
 struct token reservedWords[MAX_FILE_LENGTH];
 struct token specialSymbols[MAX_FILE_LENGTH];
+struct token isError[MAX_FILE_LENGTH];
 // Stores all known tokens
 token tokenStorage[MAX_FILE_LENGTH];
 
@@ -64,8 +65,6 @@ token tokenStorage[MAX_FILE_LENGTH];
 int counter;
 // Number of known tokens
 int tokenCount;
-// Global flag for error handling
-int error;
 
 // Function Prototypes
 // Initialize data: known digits, reserved words, and symbols
@@ -74,6 +73,7 @@ void initDigits();
 void initReservedWords();
 void initSpecialSymbols();
 void initTokenStorage();
+void initError();
 
 // Reads raw input file, deletes comments, and removes whitespace
 void read();
@@ -326,29 +326,22 @@ void initTokenStorage() {
     }
 }
 
-const char* getErrorMessage(int id) {
-  switch (id)
-  {
-    // Identifier starts with a number
-    case 0:
-      return "Variable does not start with letter";
+void initError() {
+  isError[0].id = 34;
+  isError[0].type = errsym;
+  strcpy(isError[0].name, "Variable does not start with letter");
 
-    // Number exceeds five digits
-    case 1:
-      return "Number should not exceed 5 digits in length";
+  isError[1].id = 35;
+  isError[1].type = errsym;
+  strcpy(isError[1].name, "Number should not exceed 5 digits in length");
 
-    // Identifier exceed 11 characters in length
-    case 2:
-        return "Identifier's name is too long";
+  isError[2].id = 36;
+  isError[2].type = errsym;
+  strcpy(isError[2].name, "Identifier's name is too long");
 
-    // Invalid symbol
-    case 3:
-      return "Invalid symbol found";
-
-    // Unknown error thrown
-    default:
-      return "";
-  }
+  isError[3].id = 37;
+  isError[3].type = errsym;
+  strcpy(isError[3].name, "Invalid symbol found");
 }
 
 void read() {
@@ -441,8 +434,6 @@ void scan() {
   {
     if ( !isWhiteSpace(cleanInput[counter]) )
     {
-      // Assume that there is no error until proven otherwise
-      error = 0;
       // printf("Check: %c\n", cleanInput[counter]);
       // Assume it is an invalid token type
       struct token t;
@@ -494,8 +485,6 @@ void scan() {
 
 
       // Otherwise an invalid symbol was encountered
-      error = 3;
-      printf(ANSI_COLOR_DARKRED"%s: "ANSI_COLOR_RESET, getErrorMessage(error));
       printf(ANSI_COLOR_REDP"%c\n"ANSI_COLOR_RESET, cleanInput[counter]);
       // memset(&t.name, 0, sizeof(char) * MAX_TOKEN_SPACE);
       // memset(&t, 0, sizeof(struct token));
@@ -615,8 +604,6 @@ void isIdentifier(struct token* t, int inputPosition) {
     // If the number exceeds five digits in length, throw an error
     if ( getLength(t->name) > MAX_NUM_LENGTH )
     {
-        error = 1;
-        printf(ANSI_COLOR_DARKRED"%s: "ANSI_COLOR_RESET, getErrorMessage(error));
         t->type = errsym;
         t->id = 35;
     }
@@ -636,21 +623,19 @@ void isIdentifier(struct token* t, int inputPosition) {
         )
       )
       {
-        error = 0;
-        printf(ANSI_COLOR_DARKRED"%s: "ANSI_COLOR_RESET, getErrorMessage(error));
-        // Free up the memory for the temp string
+        // Set the token as an error and its id
         t->type = errsym;
         t->id = 34;
+        // Free up the memory for the temp string
         free(temp);
         return;
       }
 
   if ( getLength(t->name) > 11 )
   {
-      error = 2;
-      t->type = errsym;
-      t->id = 36;
-      printf(ANSI_COLOR_DARKRED"%s: "ANSI_COLOR_RESET, getErrorMessage(error));
+    // Set the token type as an error and its id
+    t->type = errsym;
+    t->id = 36;
   }
 
   // Free up the memory for the temp string
