@@ -719,7 +719,8 @@ int isSpecial(int inputPosition, char* string, int length) {
   if ( !( (string[length] >= 40 && string[length] <= 47) || (string[length] >= 58 && string[length] <= 62) || (string[length] == 37) ) )
     return 0;
 
-  if ( (cleanInput[inputPosition + 1] >= 40 && cleanInput[inputPosition + 1] <= 47) || (cleanInput[inputPosition + 1] >= 58 && cleanInput[inputPosition + 1] <= 62) || (cleanInput[inputPosition + 1] == 37) )
+  // If the next character happens to be '>' or '=' in case the symbol happens to be '<>', '<=', or '>='
+  if ( (cleanInput[inputPosition + 1] == 61 || cleanInput[inputPosition + 1] == 62) )
     return isSpecial(inputPosition + 1, string, length + 1);
 
   // Check the current string against all known reserved words
