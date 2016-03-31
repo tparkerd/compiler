@@ -2,67 +2,82 @@
 #include <stdlib.h>
 #include <string.h>
 #include "color.h"
+#include "pmachine.h"
+#include "lexicalanalyzer.h"
+
+
+// Global Variables
+int tokenCounter = 0;
+struct token t;
 
 // Assume a token is always known
 
 void parser();
 void getNextToken();
+void block();
+void statement();
+void condition();
+void expression();
+void term();
+void factor();
+void ifelse(); // this may need to be split into two things
+
+
+void error();
 
 const char* errorMessage(int n);
 
 void parser() {
   // Get the first token in the program
-
   getNextToken();
   block();
-  if (token.type != periodsym)
-    error(9); // period expected
+  if (t.type != periodsym)
+    error(); // #9, period expected
 
 }
 
-void block()
-{
-  if ( token.type == constsym )
+void block() {
+  if ( t.type == constsym )
   {
-    while ( token.type != commasym )
+    while ( t.type != commasym )
     {
       getNextToken();
-      if ( token.type != identsym )
+      if ( t.type != identsym )
         error(); // expected identifier
 
       getNextToken();
-      if ( token.type != eqsym )
+      if ( t.type != eqlsym )
         error(); // expected equal sign
 
       getNextToken();
-      if ( token.type != numbersym )
+      if ( t.type != numbersym )
         error(); // expected number
 
       getNextToken();
-      if ( token.type != semicolonsym )
+      if ( t.type != semicolonsym )
         error(); // expected semicolon
 
       getNextToken();
 
     }
 
-    if ( token.type == varsym )
+    if ( t.type == varsym )
     {
-      while ( token.type == commasym )
+      while ( t.type == commasym )
       {
         getNextToken();
-        if ( token.type != identsym )
+        if ( t.type != identsym )
           error(); // expected comma
         getNextToken();
       }
 
-      if ( token.type != semicolonsym )
+      if ( t.type != semicolonsym )
         error(); // expected semicolon
 
       getNextToken();
       block();
 
-      if ( token.type != semicolonsym )
+      if ( t.type != semicolonsym )
         error(); // expected semicolon
 
       getNextToken();
@@ -72,9 +87,9 @@ void block()
   }
 }
 
-
 void getNextToken() {
-
+  // copy over the next token
+  t = tokenStorage[tokenCounter++];
 }
 
 const char* errorMessage(int n) {
