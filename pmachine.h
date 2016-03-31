@@ -1,14 +1,6 @@
-/*
-  Timothy Parker
-  PID: t2649316
-  COP 3402 - Section 001
-  Homework #1 - P-Machine
-  Due: 8 Feb 2016
-
-*/
-
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define MAX_STACK_HEIGHT 2000
 #define MAX_CODE_LENGTH 500
@@ -46,6 +38,8 @@ FILE* ifp;
 // Output File Pointer
 FILE* ofp;
 
+void pmachine();
+
 // Utility Functions
 // Fetchs instruction: gets an instruction out of code memory, given the a
 // program counter location (i.e., it's memory address in the code memory)
@@ -62,7 +56,7 @@ int base(int l, int m);
 // Display the current stack
 void printStack();
 
-int main() {
+void pmachine() {
   // Open file containing numeric code
   ifp = fopen("mcode.txt", "r");
   ofp = fopen("stacktrace.txt", "w");
@@ -87,8 +81,6 @@ int main() {
 
   // Close file, as it is no longer needed
   fclose(ifp);
-
-  printf("Number of instructions: %d\n", i);
 
   // Display the numeric code with their line
   displayCode(i);
@@ -118,12 +110,11 @@ int main() {
 
     // If the SP, BP, and PC are all zero, that defines a halt condition
     // so set the halt state to TRUE
-    if (SP == 0 && BP == 0 && PC == 0)
+    if (BP == 0 && PC == 0)
     {
       halt = 1;
     }
   }
-  return 0;
 }
 
 void displayCode(int nLines) {
@@ -167,6 +158,7 @@ void execute(instruction ir) {
           break;
         // Negation
         case 1:
+          SP--;
           stack[SP] = -stack[SP];
           break;
         // Addition
@@ -225,6 +217,7 @@ void execute(instruction ir) {
           break;
         // GEQ
         case 13:
+          SP--;
           stack[SP] = stack[SP] >= stack[SP + 1];
           break;
       }
@@ -279,17 +272,20 @@ void execute(instruction ir) {
     // Case 2. Read in input from the user and store it at the top of the stack
     // Case 3. Halt the machine
     case 9:
+    case 10:
+    case 11:
       switch(ir.m) {
         case 1:
-          printStack();
+          printf("%d ", stack[SP]);
           SP--;
           break;
         case 2:
           SP++;
           // read(stack[SP]); Not sure what to do with this, but it was given in the spec
+          scanf("%d", &stack[SP]);
           break;
         case 3:
-          halt = 0;
+          halt = 1;
       }
       break;
   }
