@@ -4,10 +4,12 @@
 #include "color.h"
 #include "pmachine.h"
 #include "lexicalanalyzer.h"
+#include "parser.h"
 
 
 int main() {
-  pmachine();
-  lexicalanalyzer();
+  // pmachine();
+  // lexicalanalyzer();
+  parser();
   return 0;
 }
