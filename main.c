@@ -10,6 +10,6 @@
 int main() {
   // pmachine();
   // lexicalanalyzer();
-  parser();
+  // parser();
   return 0;
 }

@@ -1,16 +1,8 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "color.h"
-#include "pmachine.h"
-#include "lexicalanalyzer.h"
 
 
 // Global Variables
 int tokenCounter = 0;
 struct token t;
-
-// Assume a token is always known
 
 void parser();
 void getNextToken();
@@ -21,11 +13,9 @@ void expression();
 void term();
 void factor();
 void ifelse(); // this may need to be split into two things
-
-
 void error();
-
 const char* errorMessage(int n);
+
 
 void parser() {
   // Get the first token in the program
@@ -87,67 +77,117 @@ void block() {
   }
 }
 
+void statement() {
+
+  // If an identifier is found
+  if ( t.type == identsym )
+  {
+    getNextToken();
+    if ( t.type != becomessym )
+      error(); // expected becomes symbol
+    getNextToken();
+    expression();
+
+  // If a call is found instead
+  } else if ( t.type == callsym )
+  {
+    getNextToken();
+    if ( t.type != identsym )
+      error(); // expected identifier
+    getNextToken();
+
+  // If a begin is found instead of identifier or call
+  } else if ( t.type == beginsym )
+  {
+    getNextToken();
+    statement();
+    while ( t.type == semicolonsym )
+    {
+      getNextToken();
+      statement();
+    }
+    if ( t.type != endsym )
+      error(); // expected end symbol
+
+    getNextToken();
+
+  // Else if ifsym instead of begin, identifier, or call
+  } else if ( t.type == ifsym )
+  {
+    getNextToken();
+    condition();
+    if ( t.type != thensym )
+      error(); // expected then
+    getNextToken();
+    statement();
+
+  } else if ( t.type == whilesym )
+  {
+    getNextToken();
+    condition();
+    if ( t.type != dosym )
+      error(); // do expected
+
+    getNextToken();
+    statement();
+  }
+}
+
+void condition() {
+  if ( t.type == oddsym )
+  {
+    getNextToken();
+    expression();
+  } else
+  {
+    expression();
+    // if (t.type != relation )
+    //   error(); // expected a relational operator
+    getNextToken();
+    expression();
+  }
+}
+
+void expression() {
+  if ( t.type == plussym || t.type == minussym )
+    getNextToken();
+  term();
+  while ( t.type == plussym || t.type == minussym )
+  {
+    getNextToken();
+    term();
+  }
+}
+
+void term() {
+  factor();
+  while ( t.type == multsym || t.type == slashsym )
+  {
+    getNextToken();
+    factor();
+  }
+}
+
+void factor() {
+  if ( t.type == identsym )
+    getNextToken();
+  else if ( t.type == numbersym )
+    getNextToken();
+  else if ( t.type == lparentsym )
+  {
+    getNextToken();
+    if ( t.type != rparentsym )
+      error(); // expected righthand parenthesis
+    getNextToken();
+  } else
+    error(); // expected an identifier, numbers, or left parenthesis
+}
+
+
 void getNextToken() {
-  // copy over the next token
   t = tokenStorage[tokenCounter++];
 }
 
-const char* errorMessage(int n) {
-  switch(n)
-  {
-    case 0:
-      break;
-    case 1:
-      return "Use = instead of :=.";
-    case 2:
-      return "= must be followed by a number.";
-    case 3:
-      return "Identifier ust be followed by =.";
-    case 4:
-      return "const, var, procedure must be followeed by identifier.";
-    case 5:
-      return "semicolon or comma missing.";
-    case 6:
-      return "Incorrect symbol after procedure declaration.";
-    case 7:
-      return "Statement expected.";
-    case 8:
-      return "Incorrect symbol after statement part in block.";
-    case 9:
-      return "Period expected.";
-    case 10:
-      return "Semicolon between statements missing.";
-    case 11:
-      return "Undeclared identifier.";
-    case 12:
-      return "Assignment to constant or procedure is not allowed.";
-    case 13:
-      return "Assignment operator expected.";
-    case 14:
-      return "call must be followed by an identifier.";
-    case 15:
-      return "Call of a constant or variable is meaningless.";
-    case 16:
-      return "then expected.";
-    case 17:
-      return "Semicolon or } expected.";
-    case 18:
-      return "do expected.";
-    case 19:
-      return "Incorrect symbol following statement.";
-    case 20:
-      return "Relational operator expected.";
-    case 21:
-      return "Expression must not contain a procedure identifier.";
-    case 22:
-      return "Right parenthesis missing.";
-    case 23:
-      return "The preceding factor cannot begin with this symbol.";
-    case 24:
-      return "An expression cannot begin with this symbol.";
-    case 25:
-      return "This number is too large.";
-    default:
-      return "Unknown error";
-  }
+void error() {
+  printf(ANSI_COLOR_DARKRED"error\n"ANSI_COLOR_RESET);
 }

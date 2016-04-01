@@ -1,6 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 // Limits
 #define MAX_FILE_LENGTH 25000
