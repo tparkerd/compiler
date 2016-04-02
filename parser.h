@@ -1,15 +1,5 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "color.h"
-
 #define DEBUG 1
 
-typedef struct token {
-  int id;
-  char name[MAX_TOKEN_SPACE];
-  tokenType type;
-} token;
 
 // Global Variables
 int tokenCounter = 0;
@@ -40,83 +30,101 @@ void program() {
   if (t.type != periodsym)
   {
     printf(ANSI_COLOR_DARKRED"period\n"ANSI_COLOR_RESET);
-    exit(0);
+    return;
   }
 
 }
 
 void block() {
   (DEBUG) ? printf(ANSI_COLOR_CYAN"Block()\n"ANSI_COLOR_RESET) : printf(" ");
+
+  // Case: constant declaration
   if ( t.type == constsym )
   {
-
     do
     {
       getNextToken();
       if ( t.type != identsym )
       {
         printf(ANSI_COLOR_DARKRED"identifier\n"ANSI_COLOR_RESET);
-        exit(0);
+        return;
       }
 
       getNextToken();
       if ( t.type != eqlsym )
       {
         printf(ANSI_COLOR_DARKRED"equal sign\n"ANSI_COLOR_RESET);
-        exit(0);
+        return;
       }
 
       getNextToken();
       if ( t.type != numbersym )
       {
         printf(ANSI_COLOR_DARKRED"number\n"ANSI_COLOR_RESET);
-        exit(0);
+        return;
       }
     } while ( t.type == commasym );
 
-      getNextToken();
-      if ( t.type != semicolonsym )
-      {
-        printf(ANSI_COLOR_DARKRED"semicolon\n"ANSI_COLOR_RESET);
-        exit(0);
-      }
+    getNextToken();
 
-      getNextToken();
-    }
-
-    if ( t.type == varsym )
+    // must end with a semicolon
+    if ( t.type != semicolonsym )
     {
-      while ( t.type == commasym )
-      {
-        getNextToken();
-        if ( t.type != identsym )
-        {
-          printf(ANSI_COLOR_DARKRED"identifier\n"ANSI_COLOR_RESET);
-          exit(0);
-        }
-        getNextToken();
-      }
-
-      if ( t.type != semicolonsym )
-      {
-        printf(ANSI_COLOR_DARKRED"semicolon\n"ANSI_COLOR_RESET);
-        exit(0);
-      }
-
-      getNextToken();
-      block();
-
-      if ( t.type != semicolonsym )
-      {
-        printf(ANSI_COLOR_DARKRED"semicolon\n"ANSI_COLOR_RESET);
-        exit(0);
-      }
-
-      getNextToken();
+      printf(ANSI_COLOR_DARKRED"semicolon\n"ANSI_COLOR_RESET);
+      return;
     }
 
-    statement();
-  }
+    getNextToken();
+  } // end constant declaration
+
+  // Case: variable declaration
+  if ( t.type == varsym )
+  {
+    do
+    {
+      getNextToken();
+      if ( t.type != identsym )
+      {
+        printf(ANSI_COLOR_DARKRED"identifier\n"ANSI_COLOR_RESET);
+        return;
+      }
+      getNextToken();
+    } while ( t.type == commasym );
+
+    // must end with a semicolon
+    if ( t.type != semicolonsym )
+    {
+      printf(ANSI_COLOR_DARKRED"semicolon\n"ANSI_COLOR_RESET);
+      return;
+    }
+    getNextToken();
+  } // end variable declaration
+
+  // Case: procedure declaration
+  while ( t.type == procsym )
+  {
+    getNextToken();
+    if ( t.type != identsym )
+    {
+      printf(ANSI_COLOR_DARKRED"identifier\n"ANSI_COLOR_RESET);
+      return;
+    }
+    getNextToken();
+    if ( t.type != semicolonsym )
+    {
+      printf(ANSI_COLOR_DARKRED"semicolon\n"ANSI_COLOR_RESET);
+      return;
+    }
+    getNextToken();
+    block();
+
+    if ( t.type != semicolonsym )
+    {
+      printf(ANSI_COLOR_DARKRED"semicolon\n"ANSI_COLOR_RESET);
+      return;
+    }
+  } // end procedure declaration
+  statement();
 }
 
 void statement() {
@@ -128,7 +136,7 @@ void statement() {
     if ( t.type != becomessym )
     {
       printf(ANSI_COLOR_DARKRED"becomes\n"ANSI_COLOR_RESET);
-      exit(0);
+      return;
     }
     getNextToken();
     expression();
@@ -140,7 +148,7 @@ void statement() {
     if ( t.type != identsym )
     {
       printf(ANSI_COLOR_DARKRED"identifier\n"ANSI_COLOR_RESET);
-      exit(0);
+      return;
     }
     getNextToken();
 
@@ -157,7 +165,7 @@ void statement() {
     if ( t.type != endsym )
     {
       printf(ANSI_COLOR_DARKRED"end\n"ANSI_COLOR_RESET);
-      exit(0);
+      return;
     }
 
     getNextToken();
@@ -180,7 +188,7 @@ void statement() {
     if ( t.type != dosym )
     {
       printf(ANSI_COLOR_DARKRED"do\n"ANSI_COLOR_RESET);
-      exit(0);
+      return;
     }
 
     getNextToken();
@@ -200,7 +208,7 @@ void condition() {
     if ( t.type != neqsym || t.type != lessym || t.type != leqsym || t.type != gtrsym || t.type != geqsym )
     {
       printf(ANSI_COLOR_DARKRED"relational operator\n"ANSI_COLOR_RESET);
-      exit(0);
+      return;
     }
     getNextToken();
     expression();
@@ -241,7 +249,7 @@ void factor() {
   } else
   {
     printf(ANSI_COLOR_DARKRED"identifier, number, or (\n"ANSI_COLOR_RESET);
-    exit(0);
+    return;
   }
 }
 
