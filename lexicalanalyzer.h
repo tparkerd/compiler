@@ -1,3 +1,7 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "color.h"
 
 // Limits
 #define MAX_FILE_LENGTH 25000
@@ -16,9 +20,9 @@ typedef enum{
 } tokenType;
 
 typedef struct token {
-    int id;
-    char name[MAX_TOKEN_SPACE];
-    tokenType type;
+  int id;
+  char name[MAX_TOKEN_SPACE];
+  tokenType type;
 } token;
 
 // Global Variables
