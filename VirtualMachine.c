@@ -4,6 +4,9 @@
 //Assignment 1
 //Date Due: 2-8-16
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #define MAX_CODE_LENGTH 500
 #define MAX_LEXI_LEVELS 3
 #define MAX_STACK_HEIGHT 2000
@@ -46,7 +49,6 @@ void pipeLaying();
 void printOut(int operation);
 void runCode(int operation, int operation2);
 void virtualMachine(int operation);
-void pmachine();
 
 
 //Takes the code file you read into it and prints into the filetrace the steps it's taking
@@ -298,12 +300,12 @@ void virtualMachine(int operation){
 }
 
 //Find out the MCode file name and calls virtualMachine function to open, go through, and write output to stacktrace
-void pmachine(){
+int main(int argc, char *argv[]){
     int v;
     char inputFileName[500];
 
     strcpy(inputFileName,"mcode.txt");
     virtualMachine(v);
 
-    //return 0;
+    return 0;
 }
