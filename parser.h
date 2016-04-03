@@ -4,6 +4,10 @@
 // Global Variables
 int tokenCounter = 0;
 struct token t;
+char lexTest[MAX_FILE_LENGTH];
+char lexOutput[MAX_FILE_LENGTH];
+FILE* parserInput;
+FILE* parserOutput;
 
 void parser();
 void program();
@@ -270,7 +274,7 @@ const char* translate(int n) {
     case 0:
       return "error";
     case 1:
-      return "nul";
+      return "nulsym";
     case 2:
       return "identsym";
     case 3:
