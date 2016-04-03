@@ -9,3 +9,5 @@ lexemelist.txt
 lexemetable.txt
 stacktrace.txt
 *.gch
+.DS_STORE
+/DS_STORE
