@@ -3,11 +3,12 @@
 
 // Global Variables
 int tokenCounter = 0;
+int tokenCount;
 struct token t;
-char lexTest[MAX_FILE_LENGTH];
-char lexOutput[MAX_FILE_LENGTH];
+struct token lexList[MAX_FILE_LENGTH];
+// struct token lexOutput[MAX_FILE_LENGTH];
 FILE* parserInput;
-FILE* parserOutput;
+// FILE* parserOutput;
 
 void parser();
 void program();
@@ -21,9 +22,53 @@ void factor();
 void ifelse(); // this may need to be split into two things
 void error();
 const char* translate(int n);
+void readTokenList();
+void displayTokenList();
+void countValidTokens();
+
+void readTokenList() {
+ int i = 0;
+
+  FILE* parserInput = fopen("lexemelist.txt", "r");
+
+  int tmp;
+  while ( fscanf(parserInput, "%d", &tmp) != EOF && tmp > 0 && tmp < 34) {
+    {
+      char buffer[20];
+      int intBuffer;
+      if ( tmp == 2 )
+      {
+        fscanf(parserInput, "%s", buffer);
+      } else if ( tmp == 3 )
+      {
+        fscanf(parserInput, "%d", &intBuffer);
+      }
+      lexList[i].id = tmp;
+      i++;
+    }
+  }
+  fclose(parserInput);
+ }
+
+void displayTokenList() {
+    int i;
+    for(i = 0; i < tokenCount; i++)
+    {
+      printf(ANSI_COLOR_BLUE"%d "ANSI_COLOR_RESET, lexList[i].id);
+    }
+}
+
+void countValidTokens() {
+  while ( lexList[tokenCount].id > 0 && lexList[tokenCount].id < 34 )
+  {
+    tokenCount++;
+  }
+}
 
 void parser() {
-  (DEBUG) ? printf(ANSI_COLOR_CYAN"Token count: %d\n"ANSI_COLOR_RESET, tokenCounter) : printf(" ");
+  readTokenList();
+  countValidTokens();
+  displayTokenList();
   program();
 }
 
@@ -314,20 +359,22 @@ void factor() {
     if( t.type != rparentsym )
     {
       printf(ANSI_COLOR_DARKRED")\n"ANSI_COLOR_RESET);
-    } 
+    }
     else {
     //printf(ANSI_COLOR_DARKRED"identifier, number, or (\n"ANSI_COLOR_RESET);
     getNextToken();
     return;
+    }
   }
-}
 }
 
 void getNextToken() {
+  if ( tokenCounter >= tokenCount + 1)
+  {
+    exit(0);
+  }
   (DEBUG) ? printf(ANSI_COLOR_GREEN"Token (%d) %s\n"ANSI_COLOR_RESET, t.id, translate(t.id)) : printf(" ");
-  while ( (strcmp(tokenStorage[tokenCounter].name, "") == 0) )
-    tokenCounter++;
-  t = tokenStorage[tokenCounter++];
+  t = lexList[tokenCounter++];
 }
 
 void error(int e) {
@@ -486,7 +533,7 @@ const char* translate(int n) {
       return "elsesym";
     case 34:
       return "errsym";
-    default: 
+    default:
       return "unknownsym";
   }
 }
