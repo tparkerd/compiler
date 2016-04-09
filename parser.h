@@ -44,6 +44,7 @@ void readTokenList() {
         fscanf(parserInput, "%d", &intBuffer);
       }
       lexList[i].id = tmp;
+      lexList[i].type = tmp;
       i++;
     }
   }
@@ -312,25 +313,25 @@ void condition() {
   } else
   {
     expression();
-    if ( t.type != neqsym || t.type != lessym || t.type != leqsym || t.type != gtrsym || t.type != geqsym )
+    if ( (!(t.type != neqsym || t.type != lessym || t.type != leqsym || t.type != gtrsym || t.type != geqsym) ))
     {
       printf(ANSI_COLOR_DARKRED"relational operator\n"ANSI_COLOR_RESET);
+      getNextToken();
+      expression();
       return;
     }
-    getNextToken();
-    expression();
   }
 }
 
 void expression() {
-  if ( t.type == plussym || t.type == minussym )
+  if ( t.type == plussym || t.type == minussym ){
     getNextToken();
+  }
   term();
   while ( t.type == plussym || t.type == minussym )
   {
     getNextToken();
     term();
-    //condition();
   }
 }
 
