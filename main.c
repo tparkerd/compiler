@@ -9,7 +9,7 @@
 void readTokenList();
 
 int main() {
-  //pmachine();
+  pmachine();
   lexicalanalyzer();
   readTokenList();
   parser();
@@ -17,7 +17,7 @@ int main() {
 }
 
 void readTokenList() {
- int i, j = 0;
+ int i = 0, j = 0;
 
   FILE* parserInput = fopen("lexemelist.txt", "r");
 

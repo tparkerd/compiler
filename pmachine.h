@@ -303,7 +303,7 @@ void pmachine(){
     char inputFileName[500];
 
     strcpy(inputFileName,"mcode.txt");
-    virtualMachine(v);
+    //virtualMachine(v);
 
     //return 0;
 }
