@@ -7,11 +7,8 @@
 #include "parser.h"
 
 void readTokenList();
-// void displayTokenList(int count);
 void displayTokenList();
 void countValidTokens();
-// void cleanLexList(struct token* list, int size);
-// struct token* lexList;
 
 
 int main() {

@@ -1,14 +1,21 @@
 #define DEBUG 1
+#define MAX_SYMBOL_TABLE_SIZE 100
 
+typedef struct symbol {
+  int kind;       // const = 1, var = 1, proc = 3
+  char name[12];  // name up to 11 characters
+  int val;        // number (ASCII value)
+  int level;      // L level
+  int addr;       // M address
+} symbol;
 
 // Global Variables
 int tokenCounter = 0;
 int tokenCount;
 struct token t;
 struct token lexList[MAX_FILE_LENGTH];
-// struct token lexOutput[MAX_FILE_LENGTH];
 FILE* parserInput;
-// FILE* parserOutput;
+struct symbol symbol_table[MAX_SYMBOL_TABLE_SIZE];
 
 void parser();
 void program();
@@ -19,12 +26,14 @@ void condition();
 void expression();
 void term();
 void factor();
-void ifelse(); // this may need to be split into two things
 void error();
 const char* translate(int n);
 void readTokenList();
 void displayTokenList();
 void countValidTokens();
+
+
+
 
 void readTokenList() {
  int i = 0;
@@ -370,12 +379,12 @@ void factor() {
 }
 
 void getNextToken() {
-  if ( tokenCounter >= tokenCount + 1)
+  if ( tokenCounter >= tokenCount)
   {
     exit(0);
   }
-  (DEBUG) ? printf(ANSI_COLOR_GREEN"Token (%d) %s\n"ANSI_COLOR_RESET, t.id, translate(t.id)) : printf(" ");
   t = lexList[tokenCounter++];
+  (DEBUG) ? printf(ANSI_COLOR_GREEN"Token (%d) %s\n"ANSI_COLOR_RESET, t.id, translate(t.id)) : printf(" ");
 }
 
 void error(int e) {
