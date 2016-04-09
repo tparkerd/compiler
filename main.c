@@ -6,11 +6,6 @@
 #include "lexicalanalyzer.h"
 #include "parser.h"
 
-void readTokenList();
-void displayTokenList();
-void countValidTokens();
-
-
 int main() {
   pmachine();
   lexicalanalyzer();
