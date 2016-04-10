@@ -1,8 +1,10 @@
+/*global main.c */
+
 #define DEBUG 1
 #define MAX_SYMBOL_TABLE_SIZE 100
 
 typedef struct symbol {
-  int kind;       // const = 1, var = 1, proc = 3
+  int kind;       // const = 1, var = 2, proc = 3
   char name[12];  // name up to 11 characters
   int val;        // number (ASCII value)
   int level;      // L level
@@ -12,6 +14,9 @@ typedef struct symbol {
 // Global Variables
 int tokenCounter = 0;
 int tokenCount;
+int level = 0;
+int varLevel = 0, constLevel = 0, varNum = 0, constNum = 0;
+
 struct token t;
 struct token lexList[MAX_FILE_LENGTH];
 FILE* parserInput;
@@ -31,8 +36,7 @@ const char* translate(int n);
 void readTokenList();
 void displayTokenList();
 void countValidTokens();
-
-
+void clearSymbolList();
 
 
 void readTokenList() {
@@ -79,6 +83,7 @@ void parser() {
   readTokenList();
   countValidTokens();
   displayTokenList();
+  clearSymbolList();
   program();
 }
 
@@ -96,6 +101,8 @@ void program() {
 
 void block() {
   (DEBUG) ? printf(ANSI_COLOR_CYAN"Block()\n"ANSI_COLOR_RESET) : printf(" ");
+
+
 
   // Case: constant declaration
   if ( t.type == constsym )
@@ -200,10 +207,6 @@ void statement() {
     getNextToken();
     expression();
 
-
-
-
-
   // If a call is found instead
   } else if ( t.type == callsym )
   {
@@ -214,10 +217,6 @@ void statement() {
       return;
     }
     getNextToken();
-
-
-
-
 
   // If a begin is found instead of identifier or call
   } else if ( t.type == beginsym )
@@ -234,43 +233,29 @@ void statement() {
       printf(ANSI_COLOR_DARKRED"end\n"ANSI_COLOR_RESET);
       return;
     }
-
     getNextToken();
-
-
-
 
   // If a read is found instead of identifier or call
   } else if ( t.type == readsym )
   {
     getNextToken();
-    //statement();
     while ( t.type != semicolonsym )
     {
       getNextToken();
-      //statement();
     }
     if ( t.type == semicolonsym )
     {
       //printf(ANSI_COLOR_DARKRED"end\n"ANSI_COLOR_RESET);
       return;
     }
-
     getNextToken();
-
-
-
-
-
-      // If a write is found instead of identifier or call
+  // If a write is found instead of identifier or call
   } else if ( t.type == writesym )
   {
     getNextToken();
-    //statement();
     while ( t.type != semicolonsym )
     {
       getNextToken();
-      //statement();
     }
     if ( t.type == semicolonsym )
     {
@@ -278,9 +263,7 @@ void statement() {
       //printf(ANSI_COLOR_DARKRED"end\n"ANSI_COLOR_RESET);
       return;
     }
-
     getNextToken();
-
   // Else if ifsym instead of begin, identifier, or call
   } else if ( t.type == ifsym )
   {
@@ -297,11 +280,8 @@ void statement() {
 
   } else if ( t.type == whilesym )
   {
-    //printf("One\n");
     getNextToken();
-    //printf("Two\n");
     condition();
-    //printf("Three\n");
     if ( t.type != dosym )
     {
       getNextToken();
@@ -322,7 +302,7 @@ void condition() {
   } else
   {
     expression();
-    if ( (!(t.type != neqsym || t.type != lessym || t.type != leqsym || t.type != gtrsym || t.type != geqsym) ))
+    if ( !(t.type == neqsym || t.type == lessym || t.type == leqsym || t.type == gtrsym || t.type == geqsym) )
     {
       printf(ANSI_COLOR_DARKRED"relational operator\n"ANSI_COLOR_RESET);
       getNextToken();
@@ -546,4 +526,18 @@ const char* translate(int n) {
     default:
       return "unknownsym";
   }
+}
+
+void clearSymbolList() {
+  memset(&symbol_table, 0, sizeof(struct symbol) * MAX_SYMBOL_TABLE_SIZE);
+
+  printf("\n");
+  int i;
+  for (i = 0; i < MAX_SYMBOL_TABLE_SIZE; i++)
+  {
+    printf("Kind: %d\nName: %s\nVal: %d\nLevel: %d\nAddr: %d\n", symbol_table[i].kind, symbol_table[i].name, symbol_table[i].val, symbol_table[i].level, symbol_table[i].addr);
+  }
+
+
+
 }

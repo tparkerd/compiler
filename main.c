@@ -7,7 +7,7 @@
 #include "parser.h"
 
 int main() {
-  pmachine();
+  // pmachine();
   lexicalanalyzer();
   parser();
   return 0;
