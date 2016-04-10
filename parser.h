@@ -1,8 +1,9 @@
 #define DEBUG 1
 #define MAX_SYMBOL_TABLE_SIZE 100
 
+
 typedef struct symbol {
-  int kind;       // const = 1, var = 1, proc = 3
+  int kind;       // const = 1, var = 2, proc = 3
   char name[12];  // name up to 11 characters
   int val;        // number (ASCII value)
   int level;      // L level
@@ -11,7 +12,6 @@ typedef struct symbol {
 
 // Global Variables
 int tokenCounter = 0;
-int tokenCount;
 struct token t;
 struct token lexList[MAX_FILE_LENGTH];
 FILE* parserInput;
@@ -27,12 +27,15 @@ void expression();
 void term();
 void factor();
 void getNextToken();
-void error();
+void error(int e);
 void readTokenList();
 void displayTokenList();
 void countValidTokens();
 const char* translate(int n);
+const char* kindToType(int n);
 void createSymbolList();
+int findSym(int kind, const char* name, int val, int level);
+void declareSym(int kind, const char* name, int val, int level);
 
 void parser() {
   readTokenList();
@@ -54,6 +57,7 @@ void program() {
 void block() {
   (DEBUG) ? printf(ANSI_COLOR_CYAN"Block()\n"ANSI_COLOR_RESET) : printf(" ");
 
+  struct symbol tmp;
   // Case: constant declaration
   if ( t.type == constsym )
   {
@@ -63,6 +67,9 @@ void block() {
       if ( t.type != identsym )
         error(4); // expected identifier
 
+      // Valid id found, so assign its name
+      strcpy(tmp.name, t.name);
+
       getNextToken();
       if ( t.type != eqlsym )
         error(3); // equal sign
@@ -70,6 +77,11 @@ void block() {
       getNextToken();
       if ( t.type != numbersym )
         error(2); // number sym
+
+      // Valid number found, so assign its value
+      tmp.val = atoi(t.name);
+      printf(ANSI_COLOR_PURPLE"Declare(%d, %s, %d, %d)\n"ANSI_COLOR_RESET, 1, tmp.name, tmp.val, 0);
+      declareSym(1, tmp.name, tmp.val, 0);
 
     } while ( t.type == commasym );
 
@@ -85,11 +97,18 @@ void block() {
   // Case: variable declaration
   if ( t.type == varsym )
   {
+    int value = 4;
     do
     {
       getNextToken();
       if ( t.type != identsym )
         error(4); // expected identifier
+
+      // Valid id found, so assign its Name
+      strcpy(tmp.name, t.name);
+      tmp.val = value++;
+      printf(ANSI_COLOR_PURPLE"Declare(%d, %s, %d, %d)\n"ANSI_COLOR_RESET, 1, tmp.name, tmp.val, tmp.level);
+      declareSym(2, tmp.name, tmp.val, tmp.level);
 
       getNextToken();
     } while ( t.type == commasym );
@@ -290,7 +309,6 @@ void term() {
   }
 }
 
-
 /// REVISIT FACTOR BECAUSE IT DOESN'T MATCH PSEUDOCODE
 void factor() {
   if ( t.type == identsym )
@@ -319,7 +337,8 @@ void getNextToken() {
   {
     exit(0);
   }
-  t = lexList[tokenCounter++];
+  t = lexList[tokenCounter];
+  tokenCounter++;
   (DEBUG) ? printf(ANSI_COLOR_GREEN"Token (%d) %s\n"ANSI_COLOR_RESET, t.id, translate(t.id)) : printf(" ");
 }
 
@@ -425,15 +444,13 @@ void readTokenList() {
     {
       char buffer[20];
       int intBuffer;
-      if ( tmp == 2 )
+      if ( tmp == 2 || tmp == 3)
       {
         fscanf(parserInput, "%s", buffer);
-      } else if ( tmp == 3 )
-      {
-        fscanf(parserInput, "%d", &intBuffer);
+        strcpy(lexList[i].name, buffer);
       }
       lexList[i].id = tmp;
-      lexList[i].type = tmp;
+      lexList[i].type = (tokenType)tmp;
       i++;
     }
   }
@@ -534,16 +551,68 @@ const char* translate(int n) {
   }
 }
 
+const char* kindToType(int n) {
+  switch(n)
+  {
+    case 1:
+      return "const";
+    case 2:
+      return "var";
+    case 3:
+      return "proc";
+    default:
+      return "";
+  }
+}
+
 void createSymbolList(){
   int c;
   symbolTable = fopen("symboltable.txt", "w");
+  // Header
+  fprintf(symbolTable, "%-15s\t%-15s\t%-15s\t%-15s\n", "Name", "Type", "Level", "Value");
   for(c = 0; c < tokenCount; c++)
   {
-    if(strcmp(lexList[c].name, "const") == 0)
-    {
-      symbolList[c].kind = 1;
-    }
-    fprintf(symbolTable, "%d", symbolList[c].kind);
+    if (symbolList[c].kind == 0)
+      break;
+    fprintf(symbolTable, "%-15s\t%-15s\t%-15d\t%-15d\n", symbolList[c].name, kindToType(symbolList[c].kind), symbolList[c].level, symbolList[c].val);
   }
   fclose(symbolTable);
+}
+
+// Looks in the symbol table to see if a symbol already exists
+// Level should be the current level for the parser, so if we
+// declare "var i" in a two separa... something something
+// returns either the location of the existing sym, or the next
+// empty location in "symbol memory": the symbol list array.
+int findSym(int kind, const char* name, int val, int level) {
+  int i;
+  for ( i = 0; i < MAX_SYMBOL_TABLE_SIZE; i++ )
+  {
+    // If we hit an empty block, the item doesn't exist, so
+    // return the index of the symbol table to be used to insert a new
+    // symbol
+    if ( symbolList[i].kind == 0 )
+      return i;
+
+    // We've got a match!
+    // Check if...
+    // Same kind
+    // Subprocedure (greater level) or equal to current level (may need to just be greater so sibling procs don't try to redeclare variables)
+    // Same address (may be unnecessary), not sure how this works
+    // Same name
+    if ( symbolList[i].kind == kind && symbolList[i].level >= level && (strcmp(symbolList[i].name, name) == 0) )
+      return i;
+  }
+  return 0;
+}
+
+// If the symbol does not exist yet,
+void declareSym(int kind, const char* name, int val, int level) {
+  // Find the location in the symbol list, or find an empty slot for it
+  int location = findSym(kind, name, val, level);
+
+  symbolList[location].kind = kind;
+  strcpy(symbolList[location].name, name);
+  symbolList[location].val = val;
+  symbolList[location].level = level;
 }
