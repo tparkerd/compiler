@@ -272,7 +272,6 @@ void runCode(int operation, int operation2){
         else{
             printOut(operation2);
             exit(0);
-
         }
     }
 }
