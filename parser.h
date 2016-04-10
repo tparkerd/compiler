@@ -47,12 +47,7 @@ void program() {
   getNextToken();
   block();
   if (t.type != periodsym)
-  {
-    //printf(ANSI_COLOR_DARKRED"period\n"ANSI_COLOR_RESET);
-    error(9);
-    exit(0);
-    //return;
-  }
+    error(9); // expected period
 
 }
 
@@ -66,43 +61,23 @@ void block() {
     {
       getNextToken();
       if ( t.type != identsym )
-      {
-        //printf(ANSI_COLOR_DARKRED"identifier\n"ANSI_COLOR_RESET);
-        error(4);
-        exit(0);
-        //return;
-
-      }
+        error(4); // expected identifier
 
       getNextToken();
       if ( t.type != eqlsym )
-      {
-        //printf(ANSI_COLOR_DARKRED"equal sign\n"ANSI_COLOR_RESET);
-        error(3);
-        exit(0);
-        //return;
-      }
+        error(3); // equal sign
 
       getNextToken();
       if ( t.type != numbersym )
-      {
-        //printf(ANSI_COLOR_DARKRED"number\n"ANSI_COLOR_RESET);
-        error(2);
-        exit(0);
-        //return;
-      }
+        error(2); // number sym
+
     } while ( t.type == commasym );
 
     getNextToken();
 
     // must end with a semicolon
     if ( t.type != semicolonsym )
-    {
-      //printf(ANSI_COLOR_DARKRED"semicolon\n"ANSI_COLOR_RESET);
-      error(5);
-      exit(0);
-      return;
-    }
+      error(5); // semicolon
 
     getNextToken();
   } // end constant declaration
@@ -114,23 +89,15 @@ void block() {
     {
       getNextToken();
       if ( t.type != identsym )
-      {
-        //printf(ANSI_COLOR_DARKRED"identifier\n"ANSI_COLOR_RESET);
-        //return;
-        error(4);
-        exit(0);
-      }
+        error(4); // expected identifier
+
       getNextToken();
     } while ( t.type == commasym );
 
     // must end with a semicolon
     if ( t.type != semicolonsym )
-    {
-      //printf(ANSI_COLOR_DARKRED"semicolon\n"ANSI_COLOR_RESET);
-      error(5);
-      exit(0);
-      return;
-    }
+      error(5); // semicolon
+
     getNextToken();
   } // end variable declaration
 
@@ -139,31 +106,18 @@ void block() {
   {
     getNextToken();
     if ( t.type != identsym )
-    {
-      //printf(ANSI_COLOR_DARKRED"identifier\n"ANSI_COLOR_RESET);
-      //return;
-        error(4);
-        exit(0);
+      error(4); // expected identifier
 
-    }
     getNextToken();
     if ( t.type != semicolonsym )
-    {
-      //printf(ANSI_COLOR_DARKRED"semicolon\n"ANSI_COLOR_RESET);
-      error(5);
-      exit(0);
-      return;
-    }
+      error(5); // expected semicolon
+
     getNextToken();
     block();
-
+    // Why is there a second check for a semicolon?
     if ( t.type != semicolonsym )
-    {
-      //printf(ANSI_COLOR_DARKRED"semicolon\n"ANSI_COLOR_RESET);
-      error(5);
-      exit(0);
-      return;
-    }
+      error(5); // expected semicolon
+
   } // end procedure declaration
   statement();
 }
@@ -175,36 +129,22 @@ void statement() {
   {
     getNextToken();
     if ( t.type != becomessym )
-    {
-      printf(ANSI_COLOR_DARKRED"becomes\n"ANSI_COLOR_RESET);
-      return;
-    }
+      error(26); // expected becomes
+
     getNextToken();
     expression();
-
-
-
-
-
+  }
   // If a call is found instead
-  } else if ( t.type == callsym )
+  else if ( t.type == callsym )
   {
     getNextToken();
     if ( t.type != identsym )
-    {
-      //printf(ANSI_COLOR_DARKRED"identifier\n"ANSI_COLOR_RESET);
-      //return;
-      error(14);
-      exit(0);
-    }
+      error(14); // identifier expected
+
     getNextToken();
-
-
-
-
-
+  }
   // If a begin is found instead of identifier or call
-  } else if ( t.type == beginsym )
+  else if ( t.type == beginsym )
   {
     getNextToken();
     statement();
@@ -212,59 +152,55 @@ void statement() {
     {
       getNextToken();
       statement();
-      //getNextToken();
     }
     if ( t.type != endsym )
-    {
-      error(35);
-      exit(0);
-    }
+      error(35); // expected endsym
 
     getNextToken();
+  }
 
-
-
+  /*############################################################################*/
+  /*############################################################################*/
+  /*############################################################################*/
+  /*############################################################################*/
+  /*############################################################################*/
+  /*############################################################################*/
+  /*############################################################################*/
+  /*############################################################################*/
+  /*############################################################################*/
+  /*############################################################################*/
+  /*############################################################################*/
+  /*############################################################################*/
+  /*############################################################################*/
+  /*############################################################################*/
+  /*############################################################################*/
+  /*############################################################################*/
+  /*############################################################################*/
   // If a read is found instead of identifier or call
-  } else if ( t.type == readsym )
+  else if ( t.type == readsym )
   {
     getNextToken();
-    //statement();
     while ( t.type != semicolonsym )
-    {
       getNextToken();
-      //statement();
-    }
+
+    // ########## WHY ARE WE RETURNING IF IT IS A SEMICOLON ??? ################## //
     if ( t.type == semicolonsym )
-    {
-      //printf(ANSI_COLOR_DARKRED"end\n"ANSI_COLOR_RESET);
       return;
-    }
 
     getNextToken();
-
-
-
-
-
-      // If a write is found instead of identifier or call
-  } else if ( t.type == writesym )
+  }
+  // If a write is found instead of identifier or call
+  else if ( t.type == writesym )
   {
     getNextToken();
-    //statement();
     while ( t.type != semicolonsym )
     {
       getNextToken();
       if(t.type == identsym)
-      {
         return;
-      }
     }
     if ( t.type == semicolonsym )
-    {
-      //getNextToken();
-      //printf(ANSI_COLOR_DARKRED"end\n"ANSI_COLOR_RESET);
       return;
-    }
 
     getNextToken();
 
@@ -283,29 +219,38 @@ void statement() {
     }
 
     getNextToken();
-
-  } else if ( t.type == whilesym )
+  }
+  /*############################################################################*/
+  /*############################################################################*/
+  /*############################################################################*/
+  /*############################################################################*/
+  /*############################################################################*/
+  /*############################################################################*/
+  /*############################################################################*/
+  /*############################################################################*/
+  /*############################################################################*/
+  /*############################################################################*/
+  /*############################################################################*/
+  /*############################################################################*/
+  /*############################################################################*/
+  /*############################################################################*/
+  /*############################################################################*/
+  /*############################################################################*/
+  /*############################################################################*/
+  /*############################################################################*/
+  /*############################################################################*/
+  /*############################################################################*/
+  /*############################################################################*/
+  else if ( t.type == whilesym )
   {
     getNextToken();
     condition();
-    getNextToken();
-    //statement();
     if ( t.type != dosym )
-    {
-      getNextToken();
-      //printf(ANSI_COLOR_DARKRED"do\n"ANSI_COLOR_RESET);
-      //return;
-      if(t.type != dosym){
-        error(18);
-        exit(0);
-      }else{
-        getNextToken();
-        statement();
-      }
-    }
+      error(18); // do expected
+
+    getNextToken();
+    statement();
   }
-    //getNextToken();
-    //statement();
 }
 
 void condition() {
@@ -316,22 +261,18 @@ void condition() {
   } else
   {
     expression();
-    if ( (!(t.type == neqsym || t.type == lessym || t.type == leqsym || t.type == gtrsym || t.type == geqsym) ))
-    {
-      //printf(ANSI_COLOR_DARKRED"relational operator\n"ANSI_COLOR_RESET);
-      error(20);
-      //getNextToken();
-      //expression();
-      //return;
-      exit(0);
-    }
+    if ( !(t.type == neqsym || t.type == lessym || t.type == leqsym || t.type == gtrsym || t.type == geqsym) )
+      error(20); // relational operator expected
+
+    getNextToken();
+    expression();
   }
 }
 
 void expression() {
-  if ( t.type == plussym || t.type == minussym ){
+  if ( t.type == plussym || t.type == minussym )
     getNextToken();
-  }
+
   term();
   while ( t.type == plussym || t.type == minussym )
   {
@@ -349,25 +290,22 @@ void term() {
   }
 }
 
+
+/// REVISIT FACTOR BECAUSE IT DOESN'T MATCH PSEUDOCODE
 void factor() {
   if ( t.type == identsym )
     getNextToken();
 
-
   else if ( t.type == numbersym )
     getNextToken();
-
 
   else if ( t.type == lparentsym )
   {
     getNextToken();
     expression();
     if( t.type != rparentsym )
-    {
-      //printf(ANSI_COLOR_DARKRED")\n"ANSI_COLOR_RESET);
       error(22);
-      exit(0);
-    }
+
     else {
     //printf(ANSI_COLOR_DARKRED"identifier, number, or (\n"ANSI_COLOR_RESET);
     getNextToken();
@@ -386,86 +324,95 @@ void getNextToken() {
 }
 
 void error(int e) {
-  //printf(ANSI_COLOR_DARKRED"error\n"ANSI_COLOR_RESET);
-      switch(e){
-        case 1:
-            printf("Use ""="", not "":=""\n");
-            break;
-        case 2:
-            printf("""="" must be followed by a number.\n");
-            break;
-        case 3:
-            printf("Identifier must be followed by ""="".\n");
-            break;
-        case 4:
-            printf("const, var, procedure must be followed by identifier.\n");
-            break;
-        case 5:
-            printf("Semicolon or comma missing.\n");
-            break;
-        case 6:
-            printf("Incorrect symbol after procedure declaration.\n");
-            break;
-        case 7:
-            printf("Statement expected.\n");
-            break;
-        case 8:
-            printf("Incorrect symbol after statement part in block.\n");
-            break;
-        case 9:
-            printf("Period expected.\n");
-            break;
-        case 10:
-            printf("Semicolon between statements missing.\n");
-            break;
-        case 11:
-            printf("Undeclared identifier.\n");
-            break;
-        case 12:
-            printf("Assignment to constant or procedure is not allowed\n");
-            break;
-        case 13:
-            printf("Assignment operator expected.\n");
-            break;
-        case 14:
-            printf("call must be followed by an identifier.\n");
-            break;
-        case 15:
-            printf("Call of a constant or variable is meaningless.\n");
-            break;
-        case 16:
-            printf("then expected.\n");
-            break;
-        case 17:
-            printf("Semicolon or } expected.\n");
-            break;
-        case 18:
-            printf("do expected.\n");
-            break;
-        case 19:
-            printf("Incorrect symbol following statement.\n");
-            break;
-        case 20:
-            printf("Relational operator expected.\n");
-            break;
-        case 21:
-            printf("Expression must not contain a procedure identifier.\n");
-            break;
-        case 22:
-            printf("Right parenthesis missing.\n");
-            break;
-        case 23:
-            printf("The preceding factor cannot begin with this symbol.\n");
-            break;
-        case 24:
-            printf("An expression cannot begin with this symbol.\n");
-            break;
-        case 25:
-            printf("This number is too large.\n");
-            break;
-        default:
-            printf("An error has occurred.\n");
-        }
+  switch(e){
+    case 1:
+      printf("Use ""="", not "":=""\n");
+      break;
+    case 2:
+      printf("""="" must be followed by a number.\n");
+      break;
+    case 3:
+      printf("Identifier must be followed by ""="".\n");
+      break;
+    case 4:
+      printf("const, var, procedure must be followed by identifier.\n");
+      break;
+    case 5:
+      printf("Semicolon or comma missing.\n");
+      break;
+    case 6:
+      printf("Incorrect symbol after procedure declaration.\n");
+      break;
+    case 7:
+      printf("Statement expected.\n");
+      break;
+    case 8:
+      printf("Incorrect symbol after statement part in block.\n");
+      break;
+    case 9:
+      printf("Period expected.\n");
+      break;
+    case 10:
+      printf("Semicolon between statements missing.\n");
+      break;
+    case 11:
+      printf("Undeclared identifier.\n");
+      break;
+    case 12:
+      printf("Assignment to constant or procedure is not allowed\n");
+      break;
+    case 13:
+      printf("Assignment operator expected.\n");
+      break;
+    case 14:
+      printf("call must be followed by an identifier.\n");
+      break;
+    case 15:
+      printf("Call of a constant or variable is meaningless.\n");
+      break;
+    case 16:
+      printf("then expected.\n");
+      break;
+    case 17:
+      printf("Semicolon or } expected.\n");
+      break;
+    case 18:
+      printf("do expected.\n");
+      break;
+    case 19:
+      printf("Incorrect symbol following statement.\n");
+      break;
+    case 20:
+      printf("Relational operator expected.\n");
+      break;
+    case 21:
+      printf("Expression must not contain a procedure identifier.\n");
+      break;
+    case 22:
+      printf("Right parenthesis missing.\n");
+      break;
+    case 23:
+      printf("The preceding factor cannot begin with this symbol.\n");
+      break;
+    case 24:
+      printf("An expression cannot begin with this symbol.\n");
+      break;
+    case 25:
+      printf("This number is too large.\n");
+      break;
+
+    // Adding addition error messages for things that weren't specificed
+    case 26:
+      printf("Expected a becomessym");
+      break;
+    case 27:
+      printf("Expected identifier, number, or opening parenthesis in factor.\n");
+      break;
+    default:
+      printf("An error has occurred.\n");
+    }
+  // Halt the parser
+  exit(0);
 }
 
 void readTokenList() {
