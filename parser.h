@@ -1,10 +1,8 @@
-/*global main.c */
-
 #define DEBUG 1
 #define MAX_SYMBOL_TABLE_SIZE 100
 
 typedef struct symbol {
-  int kind;       // const = 1, var = 2, proc = 3
+  int kind;       // const = 1, var = 1, proc = 3
   char name[12];  // name up to 11 characters
   int val;        // number (ASCII value)
   int level;      // L level
@@ -14,12 +12,11 @@ typedef struct symbol {
 // Global Variables
 int tokenCounter = 0;
 int tokenCount;
-int level = 0;
-int varLevel = 0, constLevel = 0, varNum = 0, constNum = 0;
 
 struct token t;
 struct token lexList[MAX_FILE_LENGTH];
 FILE* parserInput;
+FILE* symbolTable;
 struct symbol symbol_table[MAX_SYMBOL_TABLE_SIZE];
 
 void parser();
@@ -36,8 +33,22 @@ const char* translate(int n);
 void readTokenList();
 void displayTokenList();
 void countValidTokens();
-void clearSymbolList();
+void createSymbolList();
 
+
+void createSymbolList(){
+  int c;
+  symbolTable = fopen("symboltable.txt", "w");
+  for(c = 0; c < tokenCount; c++)
+  {
+    if(strcmp(lexList[c].name, "const") == 0)
+    {
+      symbol_table[c].kind = 1;
+    }
+    fprintf(symbolTable, "%d", symbol_table[c].kind);
+  }
+  fclose(symbolTable);
+}
 
 void readTokenList() {
  int i = 0;
@@ -70,6 +81,7 @@ void displayTokenList() {
     {
       printf(ANSI_COLOR_BLUE"%d "ANSI_COLOR_RESET, lexList[i].id);
     }
+    printf("\n");
 }
 
 void countValidTokens() {
@@ -83,7 +95,6 @@ void parser() {
   readTokenList();
   countValidTokens();
   displayTokenList();
-  clearSymbolList();
   program();
 }
 
@@ -93,16 +104,16 @@ void program() {
   block();
   if (t.type != periodsym)
   {
-    printf(ANSI_COLOR_DARKRED"period\n"ANSI_COLOR_RESET);
-    return;
+    //printf(ANSI_COLOR_DARKRED"period\n"ANSI_COLOR_RESET);
+    error(9);
+    exit(0);
+    //return;
   }
 
 }
 
 void block() {
   (DEBUG) ? printf(ANSI_COLOR_CYAN"Block()\n"ANSI_COLOR_RESET) : printf(" ");
-
-
 
   // Case: constant declaration
   if ( t.type == constsym )
@@ -112,22 +123,29 @@ void block() {
       getNextToken();
       if ( t.type != identsym )
       {
-        printf(ANSI_COLOR_DARKRED"identifier\n"ANSI_COLOR_RESET);
-        return;
+        //printf(ANSI_COLOR_DARKRED"identifier\n"ANSI_COLOR_RESET);
+        error(4);
+        exit(0);
+        //return;
+
       }
 
       getNextToken();
       if ( t.type != eqlsym )
       {
-        printf(ANSI_COLOR_DARKRED"equal sign\n"ANSI_COLOR_RESET);
-        return;
+        //printf(ANSI_COLOR_DARKRED"equal sign\n"ANSI_COLOR_RESET);
+        error(3);
+        exit(0);
+        //return;
       }
 
       getNextToken();
       if ( t.type != numbersym )
       {
-        printf(ANSI_COLOR_DARKRED"number\n"ANSI_COLOR_RESET);
-        return;
+        //printf(ANSI_COLOR_DARKRED"number\n"ANSI_COLOR_RESET);
+        error(2);
+        exit(0);
+        //return;
       }
     } while ( t.type == commasym );
 
@@ -136,7 +154,9 @@ void block() {
     // must end with a semicolon
     if ( t.type != semicolonsym )
     {
-      printf(ANSI_COLOR_DARKRED"semicolon\n"ANSI_COLOR_RESET);
+      //printf(ANSI_COLOR_DARKRED"semicolon\n"ANSI_COLOR_RESET);
+      error(5);
+      exit(0);
       return;
     }
 
@@ -151,8 +171,10 @@ void block() {
       getNextToken();
       if ( t.type != identsym )
       {
-        printf(ANSI_COLOR_DARKRED"identifier\n"ANSI_COLOR_RESET);
-        return;
+        //printf(ANSI_COLOR_DARKRED"identifier\n"ANSI_COLOR_RESET);
+        //return;
+        error(4);
+        exit(0);
       }
       getNextToken();
     } while ( t.type == commasym );
@@ -160,7 +182,9 @@ void block() {
     // must end with a semicolon
     if ( t.type != semicolonsym )
     {
-      printf(ANSI_COLOR_DARKRED"semicolon\n"ANSI_COLOR_RESET);
+      //printf(ANSI_COLOR_DARKRED"semicolon\n"ANSI_COLOR_RESET);
+      error(5);
+      exit(0);
       return;
     }
     getNextToken();
@@ -172,13 +196,18 @@ void block() {
     getNextToken();
     if ( t.type != identsym )
     {
-      printf(ANSI_COLOR_DARKRED"identifier\n"ANSI_COLOR_RESET);
-      return;
+      //printf(ANSI_COLOR_DARKRED"identifier\n"ANSI_COLOR_RESET);
+      //return;
+        error(4);
+        exit(0);
+
     }
     getNextToken();
     if ( t.type != semicolonsym )
     {
-      printf(ANSI_COLOR_DARKRED"semicolon\n"ANSI_COLOR_RESET);
+      //printf(ANSI_COLOR_DARKRED"semicolon\n"ANSI_COLOR_RESET);
+      error(5);
+      exit(0);
       return;
     }
     getNextToken();
@@ -186,7 +215,9 @@ void block() {
 
     if ( t.type != semicolonsym )
     {
-      printf(ANSI_COLOR_DARKRED"semicolon\n"ANSI_COLOR_RESET);
+      //printf(ANSI_COLOR_DARKRED"semicolon\n"ANSI_COLOR_RESET);
+      error(5);
+      exit(0);
       return;
     }
   } // end procedure declaration
@@ -207,16 +238,26 @@ void statement() {
     getNextToken();
     expression();
 
+
+
+
+
   // If a call is found instead
   } else if ( t.type == callsym )
   {
     getNextToken();
     if ( t.type != identsym )
     {
-      printf(ANSI_COLOR_DARKRED"identifier\n"ANSI_COLOR_RESET);
-      return;
+      //printf(ANSI_COLOR_DARKRED"identifier\n"ANSI_COLOR_RESET);
+      //return;
+      error(14);
+      exit(0);
     }
     getNextToken();
+
+
+
+
 
   // If a begin is found instead of identifier or call
   } else if ( t.type == beginsym )
@@ -227,35 +268,52 @@ void statement() {
     {
       getNextToken();
       statement();
+      //getNextToken();
     }
     if ( t.type != endsym )
     {
-      printf(ANSI_COLOR_DARKRED"end\n"ANSI_COLOR_RESET);
-      return;
+      error(35);
+      exit(0);
     }
+
     getNextToken();
+
+
 
   // If a read is found instead of identifier or call
   } else if ( t.type == readsym )
   {
     getNextToken();
+    //statement();
     while ( t.type != semicolonsym )
     {
       getNextToken();
+      //statement();
     }
     if ( t.type == semicolonsym )
     {
       //printf(ANSI_COLOR_DARKRED"end\n"ANSI_COLOR_RESET);
       return;
     }
+
     getNextToken();
-  // If a write is found instead of identifier or call
+
+
+
+
+
+      // If a write is found instead of identifier or call
   } else if ( t.type == writesym )
   {
     getNextToken();
+    //statement();
     while ( t.type != semicolonsym )
     {
       getNextToken();
+      if(t.type == identsym)
+      {
+        return;
+      }
     }
     if ( t.type == semicolonsym )
     {
@@ -263,7 +321,9 @@ void statement() {
       //printf(ANSI_COLOR_DARKRED"end\n"ANSI_COLOR_RESET);
       return;
     }
+
     getNextToken();
+
   // Else if ifsym instead of begin, identifier, or call
   } else if ( t.type == ifsym )
   {
@@ -271,7 +331,9 @@ void statement() {
     condition();
     if ( t.type != thensym )
     {
-    printf(ANSI_COLOR_DARKRED"then\n"ANSI_COLOR_RESET);
+    //printf(ANSI_COLOR_DARKRED"then\n"ANSI_COLOR_RESET);
+      error(16);
+      exit(0);
     getNextToken();
     statement();
     }
@@ -282,16 +344,24 @@ void statement() {
   {
     getNextToken();
     condition();
+    getNextToken();
+    //statement();
     if ( t.type != dosym )
     {
       getNextToken();
-      statement();
-      printf(ANSI_COLOR_DARKRED"do\n"ANSI_COLOR_RESET);
-      return;
+      //printf(ANSI_COLOR_DARKRED"do\n"ANSI_COLOR_RESET);
+      //return;
+      if(t.type != dosym){
+        error(18);
+        exit(0);
+      }else{
+        getNextToken();
+        statement();
+      }
     }
   }
-    getNextToken();
-    statement();
+    //getNextToken();
+    //statement();
 }
 
 void condition() {
@@ -302,12 +372,14 @@ void condition() {
   } else
   {
     expression();
-    if ( !(t.type == neqsym || t.type == lessym || t.type == leqsym || t.type == gtrsym || t.type == geqsym) )
+    if ( (!(t.type == neqsym || t.type == lessym || t.type == leqsym || t.type == gtrsym || t.type == geqsym) ))
     {
-      printf(ANSI_COLOR_DARKRED"relational operator\n"ANSI_COLOR_RESET);
-      getNextToken();
-      expression();
-      return;
+      //printf(ANSI_COLOR_DARKRED"relational operator\n"ANSI_COLOR_RESET);
+      error(20);
+      //getNextToken();
+      //expression();
+      //return;
+      exit(0);
     }
   }
 }
@@ -348,7 +420,9 @@ void factor() {
     expression();
     if( t.type != rparentsym )
     {
-      printf(ANSI_COLOR_DARKRED")\n"ANSI_COLOR_RESET);
+      //printf(ANSI_COLOR_DARKRED")\n"ANSI_COLOR_RESET);
+      error(22);
+      exit(0);
     }
     else {
     //printf(ANSI_COLOR_DARKRED"identifier, number, or (\n"ANSI_COLOR_RESET);
@@ -526,18 +600,4 @@ const char* translate(int n) {
     default:
       return "unknownsym";
   }
-}
-
-void clearSymbolList() {
-  memset(&symbol_table, 0, sizeof(struct symbol) * MAX_SYMBOL_TABLE_SIZE);
-
-  printf("\n");
-  int i;
-  for (i = 0; i < MAX_SYMBOL_TABLE_SIZE; i++)
-  {
-    printf("Kind: %d\nName: %s\nVal: %d\nLevel: %d\nAddr: %d\n", symbol_table[i].kind, symbol_table[i].name, symbol_table[i].val, symbol_table[i].level, symbol_table[i].addr);
-  }
-
-
-
 }
