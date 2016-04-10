@@ -12,90 +12,34 @@ typedef struct symbol {
 // Global Variables
 int tokenCounter = 0;
 int tokenCount;
-
 struct token t;
 struct token lexList[MAX_FILE_LENGTH];
 FILE* parserInput;
 FILE* symbolTable;
-struct symbol symbol_table[MAX_SYMBOL_TABLE_SIZE];
+struct symbol symbolList[MAX_SYMBOL_TABLE_SIZE];
 
 void parser();
 void program();
-void getNextToken();
 void block();
 void statement();
 void condition();
 void expression();
 void term();
 void factor();
+void getNextToken();
 void error();
-const char* translate(int n);
 void readTokenList();
 void displayTokenList();
 void countValidTokens();
+const char* translate(int n);
 void createSymbolList();
-
-
-void createSymbolList(){
-  int c;
-  symbolTable = fopen("symboltable.txt", "w");
-  for(c = 0; c < tokenCount; c++)
-  {
-    if(strcmp(lexList[c].name, "const") == 0)
-    {
-      symbol_table[c].kind = 1;
-    }
-    fprintf(symbolTable, "%d", symbol_table[c].kind);
-  }
-  fclose(symbolTable);
-}
-
-void readTokenList() {
- int i = 0;
-
-  FILE* parserInput = fopen("lexemelist.txt", "r");
-
-  int tmp;
-  while ( fscanf(parserInput, "%d", &tmp) != EOF && tmp > 0 && tmp < 34) {
-    {
-      char buffer[20];
-      int intBuffer;
-      if ( tmp == 2 )
-      {
-        fscanf(parserInput, "%s", buffer);
-      } else if ( tmp == 3 )
-      {
-        fscanf(parserInput, "%d", &intBuffer);
-      }
-      lexList[i].id = tmp;
-      lexList[i].type = tmp;
-      i++;
-    }
-  }
-  fclose(parserInput);
- }
-
-void displayTokenList() {
-    int i;
-    for(i = 0; i < tokenCount; i++)
-    {
-      printf(ANSI_COLOR_BLUE"%d "ANSI_COLOR_RESET, lexList[i].id);
-    }
-    printf("\n");
-}
-
-void countValidTokens() {
-  while ( lexList[tokenCount].id > 0 && lexList[tokenCount].id < 34 )
-  {
-    tokenCount++;
-  }
-}
 
 void parser() {
   readTokenList();
   countValidTokens();
-  displayTokenList();
+  // displayTokenList();
   program();
+  createSymbolList();
 }
 
 void program() {
@@ -524,6 +468,47 @@ void error(int e) {
         }
 }
 
+void readTokenList() {
+ int i = 0;
+
+  FILE* parserInput = fopen("lexemelist.txt", "r");
+
+  int tmp;
+  while ( fscanf(parserInput, "%d", &tmp) != EOF && tmp > 0 && tmp < 34) {
+    {
+      char buffer[20];
+      int intBuffer;
+      if ( tmp == 2 )
+      {
+        fscanf(parserInput, "%s", buffer);
+      } else if ( tmp == 3 )
+      {
+        fscanf(parserInput, "%d", &intBuffer);
+      }
+      lexList[i].id = tmp;
+      lexList[i].type = tmp;
+      i++;
+    }
+  }
+  fclose(parserInput);
+ }
+
+void displayTokenList() {
+    int i;
+    for(i = 0; i < tokenCount; i++)
+    {
+      printf(ANSI_COLOR_BLUE"%d "ANSI_COLOR_RESET, lexList[i].id);
+    }
+    printf("\n");
+}
+
+void countValidTokens() {
+  while ( lexList[tokenCount].id > 0 && lexList[tokenCount].id < 34 )
+  {
+    tokenCount++;
+  }
+}
+
 const char* translate(int n) {
   switch (n)
   {
@@ -600,4 +585,18 @@ const char* translate(int n) {
     default:
       return "unknownsym";
   }
+}
+
+void createSymbolList(){
+  int c;
+  symbolTable = fopen("symboltable.txt", "w");
+  for(c = 0; c < tokenCount; c++)
+  {
+    if(strcmp(lexList[c].name, "const") == 0)
+    {
+      symbolList[c].kind = 1;
+    }
+    fprintf(symbolTable, "%d", symbolList[c].kind);
+  }
+  fclose(symbolTable);
 }
