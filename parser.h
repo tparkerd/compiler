@@ -290,7 +290,6 @@ void term() {
   }
 }
 
-/// REVISIT FACTOR BECAUSE IT DOESN'T MATCH PSEUDOCODE
 void factor() {
   if ( t.type == identsym )
     getNextToken();
