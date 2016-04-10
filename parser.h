@@ -12,6 +12,7 @@ typedef struct symbol {
 
 // Global Variables
 int tokenCounter = 0;
+int level = 0;
 struct token t;
 struct token lexList[MAX_FILE_LENGTH];
 FILE* parserInput;
@@ -107,8 +108,8 @@ void block() {
       // Valid id found, so assign its Name
       strcpy(tmp.name, t.name);
       tmp.val = value++;
-      printf(ANSI_COLOR_PURPLE"Declare(%d, %s, %d, %d)\n"ANSI_COLOR_RESET, 1, tmp.name, tmp.val, tmp.level);
-      declareSym(2, tmp.name, tmp.val, tmp.level);
+      printf(ANSI_COLOR_PURPLE"Declare(%d, %s, %d, %d)\n"ANSI_COLOR_RESET, 1, tmp.name, tmp.val, level);
+      declareSym(2, tmp.name, tmp.val, level);
 
       getNextToken();
     } while ( t.type == commasym );
@@ -127,16 +128,30 @@ void block() {
     if ( t.type != identsym )
       error(4); // expected identifier
 
+    // Valid id found, so assign its Name
+    strcpy(tmp.name, t.name);
+
     getNextToken();
     if ( t.type != semicolonsym )
       error(5); // expected semicolon
+
+    // Set a dummy value for the offset, so we can figure it out later
+    tmp.val = 0;
+    declareSym(3, tmp.name, tmp.val, level);
+
+    // Increase the level by one because anything after the proc was declared
+    // with be at a higher level, but not including the proc itself
+    level++;
 
     getNextToken();
     block();
-    // Why is there a second check for a semicolon?
+
     if ( t.type != semicolonsym )
       error(5); // expected semicolon
 
+    getNextToken();
+
+    level--;
   } // end procedure declaration
   statement();
 }
@@ -172,41 +187,50 @@ void statement() {
       getNextToken();
       statement();
     }
+
     if ( t.type != endsym )
       error(35); // expected endsym
 
     getNextToken();
   }
+  else if ( t.type == ifsym )
+  {
+    getNextToken();
+    condition();
+    if ( t.type != thensym )
+      error(16); // then expected
 
-  /*############################################################################*/
-  /*############################################################################*/
-  /*############################################################################*/
-  /*############################################################################*/
-  /*############################################################################*/
-  /*############################################################################*/
-  /*############################################################################*/
-  /*############################################################################*/
-  /*############################################################################*/
-  /*############################################################################*/
-  /*############################################################################*/
-  /*############################################################################*/
-  /*############################################################################*/
-  /*############################################################################*/
-  /*############################################################################*/
-  /*############################################################################*/
-  /*############################################################################*/
+    getNextToken();
+    statement();
+    getNextToken();
+
+    if ( t.type == elsesym )
+    {
+      getNextToken();
+      statement();
+    }
+
+  }
+
+  else if ( t.type == whilesym )
+  {
+    getNextToken();
+    condition();
+    if ( t.type != dosym )
+      error(18); // do expected
+
+    getNextToken();
+    statement();
+  }
   // If a read is found instead of identifier or call
   else if ( t.type == readsym )
   {
     getNextToken();
-    while ( t.type != semicolonsym )
-      getNextToken();
-
-    // ########## WHY ARE WE RETURNING IF IT IS A SEMICOLON ??? ################## //
-    if ( t.type == semicolonsym )
-      return;
+    if ( t.type != identsym )
+      error(14); // identifier expected
 
     getNextToken();
+
   }
   // If a write is found instead of identifier or call
   else if ( t.type == writesym )
@@ -224,55 +248,11 @@ void statement() {
     getNextToken();
 
   // Else if ifsym instead of begin, identifier, or call
-  } else if ( t.type == ifsym )
-  {
-    getNextToken();
-    condition();
-    if ( t.type != thensym )
-    {
-    //printf(ANSI_COLOR_DARKRED"then\n"ANSI_COLOR_RESET);
-      error(16);
-      exit(0);
-    getNextToken();
-    statement();
-    }
-
-    getNextToken();
-  }
-  /*############################################################################*/
-  /*############################################################################*/
-  /*############################################################################*/
-  /*############################################################################*/
-  /*############################################################################*/
-  /*############################################################################*/
-  /*############################################################################*/
-  /*############################################################################*/
-  /*############################################################################*/
-  /*############################################################################*/
-  /*############################################################################*/
-  /*############################################################################*/
-  /*############################################################################*/
-  /*############################################################################*/
-  /*############################################################################*/
-  /*############################################################################*/
-  /*############################################################################*/
-  /*############################################################################*/
-  /*############################################################################*/
-  /*############################################################################*/
-  /*############################################################################*/
-  else if ( t.type == whilesym )
-  {
-    getNextToken();
-    condition();
-    if ( t.type != dosym )
-      error(18); // do expected
-
-    getNextToken();
-    statement();
   }
 }
 
 void condition() {
+  (DEBUG) ? printf(ANSI_COLOR_CYAN"condition()\n"ANSI_COLOR_RESET) : printf(" ");
   if ( t.type == oddsym )
   {
     getNextToken();
@@ -289,6 +269,7 @@ void condition() {
 }
 
 void expression() {
+  (DEBUG) ? printf(ANSI_COLOR_CYAN"expression()\n"ANSI_COLOR_RESET) : printf(" ");
   if ( t.type == plussym || t.type == minussym )
     getNextToken();
 
@@ -322,14 +303,12 @@ void factor() {
     getNextToken();
     expression();
     if( t.type != rparentsym )
-      error(22);
+      error(22); // expected closing parenthesis
 
-    else {
-    //printf(ANSI_COLOR_DARKRED"identifier, number, or (\n"ANSI_COLOR_RESET);
     getNextToken();
-    return;
-    }
   }
+  else
+    error(27); // expected id, num, or opening parenthesis
 }
 
 void getNextToken() {
@@ -343,93 +322,125 @@ void getNextToken() {
 }
 
 void error(int e) {
-  switch(e){
+  FILE* lexemeOutput = fopen("parseoutput.txt", "a");
+  fprintf(lexemeOutput, "\n");
+  switch(e) {
     case 1:
+      fprintf(lexemeOutput, "%s", "Use ""="", not "":=""\n");
       printf("Use ""="", not "":=""\n");
       break;
     case 2:
+      fprintf(lexemeOutput, "%s", """="" must be followed by a number.\n");
       printf("""="" must be followed by a number.\n");
       break;
     case 3:
+      fprintf(lexemeOutput, "%s", "Identifier must be followed by ""="".\n");
       printf("Identifier must be followed by ""="".\n");
       break;
     case 4:
+      fprintf(lexemeOutput, "%s", "const, var, procedure must be followed by identifier.\n");
       printf("const, var, procedure must be followed by identifier.\n");
       break;
     case 5:
+      fprintf(lexemeOutput, "%s", "Semicolon or comma missing.\n");
       printf("Semicolon or comma missing.\n");
       break;
     case 6:
+      fprintf(lexemeOutput, "%s", "Incorrect symbol after procedure declaration.\n");
       printf("Incorrect symbol after procedure declaration.\n");
       break;
     case 7:
+      fprintf(lexemeOutput, "%s", "Statement expected.\n");
       printf("Statement expected.\n");
       break;
     case 8:
+      fprintf(lexemeOutput, "%s", "Incorrect symbol after statement part in block.\n");
       printf("Incorrect symbol after statement part in block.\n");
       break;
     case 9:
+      fprintf(lexemeOutput, "%s", "Period expected.\n");
       printf("Period expected.\n");
       break;
     case 10:
+      fprintf(lexemeOutput, "%s", "Semicolon between statements missing.\n");
       printf("Semicolon between statements missing.\n");
       break;
     case 11:
+      fprintf(lexemeOutput, "%s", "Undeclared identifier.\n");
       printf("Undeclared identifier.\n");
       break;
     case 12:
+      fprintf(lexemeOutput, "%s", "Assignment to constant or procedure is not allowed\n");
       printf("Assignment to constant or procedure is not allowed\n");
       break;
     case 13:
+      fprintf(lexemeOutput, "%s", "Assignment operator expected.\n");
       printf("Assignment operator expected.\n");
       break;
     case 14:
+      fprintf(lexemeOutput, "%s", "call must be followed by an identifier.\n");
       printf("call must be followed by an identifier.\n");
       break;
     case 15:
+      fprintf(lexemeOutput, "%s", "Call of a constant or variable is meaningless.\n");
       printf("Call of a constant or variable is meaningless.\n");
       break;
     case 16:
+      fprintf(lexemeOutput, "%s", "then expected.\n");
       printf("then expected.\n");
       break;
     case 17:
+      fprintf(lexemeOutput, "%s", "Semicolon or } expected.\n");
       printf("Semicolon or } expected.\n");
       break;
     case 18:
+      fprintf(lexemeOutput, "%s", "do expected.\n");
       printf("do expected.\n");
       break;
     case 19:
+      fprintf(lexemeOutput, "%s", "Incorrect symbol following statement.\n");
       printf("Incorrect symbol following statement.\n");
       break;
     case 20:
+      fprintf(lexemeOutput, "%s", "Relational operator expected.\n");
       printf("Relational operator expected.\n");
       break;
     case 21:
+      fprintf(lexemeOutput, "%s", "Expression must not contain a procedure identifier.\n");
       printf("Expression must not contain a procedure identifier.\n");
       break;
     case 22:
+      fprintf(lexemeOutput, "%s", "Right parenthesis missing.\n");
       printf("Right parenthesis missing.\n");
       break;
     case 23:
+      fprintf(lexemeOutput, "%s", "The preceding factor cannot begin with this symbol.\n");
       printf("The preceding factor cannot begin with this symbol.\n");
       break;
     case 24:
+      fprintf(lexemeOutput, "%s", "An expression cannot begin with this symbol.\n");
       printf("An expression cannot begin with this symbol.\n");
       break;
     case 25:
+      fprintf(lexemeOutput, "%s", "This number is too large.\n");
       printf("This number is too large.\n");
       break;
 
     // Adding addition error messages for things that weren't specificed
     case 26:
+      fprintf(lexemeOutput, "%s", "Expected a becomessym");
       printf("Expected a becomessym");
       break;
     case 27:
+      fprintf(lexemeOutput, "%s", "Expected identifier, number, or opening parenthesis in factor.\n");
       printf("Expected identifier, number, or opening parenthesis in factor.\n");
       break;
     default:
+      fprintf(lexemeOutput, "%s", "An error has occurred.\n");
       printf("An error has occurred.\n");
     }
+
+  fclose(lexemeOutput);
   // Halt the parser
   exit(0);
 }
@@ -438,22 +449,25 @@ void readTokenList() {
  int i = 0;
 
   FILE* parserInput = fopen("lexemelist.txt", "r");
+  FILE* lexemeOutput = fopen("parseoutput.txt", "w");
 
   int tmp;
   while ( fscanf(parserInput, "%d", &tmp) != EOF && tmp > 0 && tmp < 34) {
     {
+      fprintf(lexemeOutput, "%d ", tmp);
       char buffer[20];
-      int intBuffer;
       if ( tmp == 2 || tmp == 3)
       {
         fscanf(parserInput, "%s", buffer);
         strcpy(lexList[i].name, buffer);
+        fprintf(lexemeOutput, "%s ", buffer);
       }
       lexList[i].id = tmp;
       lexList[i].type = (tokenType)tmp;
       i++;
     }
   }
+  fclose(lexemeOutput);
   fclose(parserInput);
  }
 
