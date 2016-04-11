@@ -1,4 +1,4 @@
-#define DEBUG 0
+#define DEBUG 1
 #define MAX_SYMBOL_TABLE_SIZE 100
 
 
@@ -53,6 +53,15 @@ void program() {
   if (t.type != periodsym)
     error(9); // expected period
 
+  getNextToken();
+  if ( t.id != 0 )
+  {
+    error(29); // no token should follow a period
+  }
+  FILE* parseoutput = fopen("parseoutput.txt", "a");
+  fprintf(parseoutput, "\nInput program is syntactically correct.\n");
+  fclose(parseoutput);
+
 }
 
 void block() {
@@ -81,6 +90,7 @@ void block() {
 
       // Valid number found, so assign its value
       tmp.val = atoi(t.name);
+      printf(ANSI_COLOR_PURPLE"Declare(%d, %s, %d, %d)\n"ANSI_COLOR_RESET, 1, tmp.name, tmp.val, 0);
       declareSym(1, tmp.name, tmp.val, 0);
 
     } while ( t.type == commasym );
@@ -107,6 +117,7 @@ void block() {
       // Valid id found, so assign its Name
       strcpy(tmp.name, t.name);
       tmp.val = value++;
+      printf(ANSI_COLOR_PURPLE"Declare(%d, %s, %d, %d)\n"ANSI_COLOR_RESET, 1, tmp.name, tmp.val, level);
       declareSym(2, tmp.name, tmp.val, level);
 
       getNextToken();
@@ -124,7 +135,7 @@ void block() {
   {
     getNextToken();
     if ( t.type != identsym )
-      error(4); // expected identifier
+      error(4); // incorrect symbol after procedure
 
     // Valid id found, so assign its Name
     strcpy(tmp.name, t.name);
@@ -177,6 +188,7 @@ void statement() {
     if (!declared)
       error(11); // undeclared var found
 
+
     getNextToken();
     if ( t.type != becomessym )
       error(26); // expected becomes
@@ -213,19 +225,26 @@ void statement() {
   {
     getNextToken();
     condition();
-    if ( t.type != thensym )
+    if ( t.type != thensym ){
       error(16); // then expected
+    }
 
     getNextToken();
     statement();
+    if(t.type != semicolonsym){
+      error(5);
+    }
     getNextToken();
 
-    if ( t.type == elsesym )
+    if( t.type != elsesym )
     {
-      getNextToken();
-      statement();
+        error(28);
     }
+    getNextToken();
+    statement();
+    getNextToken();
   }
+
   else if ( t.type == whilesym )
   {
     getNextToken();
@@ -244,6 +263,7 @@ void statement() {
       error(14); // identifier expected
 
     getNextToken();
+
   }
   // If a write is found instead of identifier or call
   else if ( t.type == writesym )
@@ -316,7 +336,7 @@ void factor() {
 }
 
 void getNextToken() {
-  if ( tokenCounter >= tokenCount)
+  if ( tokenCounter > tokenCount + 1 )
   {
     exit(0);
   }
@@ -432,12 +452,20 @@ void error(int e) {
 
     // Adding addition error messages for things that weren't specificed
     case 26:
-      fprintf(lexemeOutput, "%s", "Expected a becomessym");
-      printf("Expected a becomessym");
+      fprintf(lexemeOutput, "%s", "Expected a becomessym\n");
+      printf("Expected a becomessym\n");
       break;
     case 27:
       fprintf(lexemeOutput, "%s", "Expected identifier, number, or opening parenthesis in factor.\n");
       printf("Expected identifier, number, or opening parenthesis in factor.\n");
+      break;
+    case 28:
+      fprintf(lexemeOutput, "%s", "Expected else.\n");
+      printf("Expected else.\n");
+      break;
+    case 29:
+      fprintf(lexemeOutput, "%s", "No symbol should follow the final period.");
+      printf("No symbol should follow the final period.\n");
       break;
     default:
       fprintf(lexemeOutput, "%s", "An error has occurred.\n");
