@@ -161,6 +161,24 @@ void statement() {
   // If an identifier is found
   if ( t.type == identsym )
   {
+    // Check if the idenfier has already been declared
+    // Assume it has not been declared
+    int declared = 0;
+    int i;
+    // Search the symbolList so far for the symbol
+    for (i = 0; i < tokenCount; i++)
+    {
+      // See if the symbol exists
+      if ( strcmp(symbolList[i].name, t.name) == 0 /*&& symbolList[i].level <= level */)
+      {
+        declared = 1;
+        break;
+      }
+    }
+    // If the variable was not declared, throw and error
+    if (!declared)
+      error(11); // undeclared var found
+
     getNextToken();
     if ( t.type != becomessym )
       error(26); // expected becomes
@@ -209,9 +227,7 @@ void statement() {
       getNextToken();
       statement();
     }
-
   }
-
   else if ( t.type == whilesym )
   {
     getNextToken();
@@ -230,24 +246,15 @@ void statement() {
       error(14); // identifier expected
 
     getNextToken();
-
   }
   // If a write is found instead of identifier or call
   else if ( t.type == writesym )
   {
     getNextToken();
-    while ( t.type != semicolonsym )
-    {
-      getNextToken();
-      if(t.type == identsym)
-        return;
-    }
-    if ( t.type == semicolonsym )
-      return;
+    if ( t.type != identsym )
+      error(14); // identifier expected
 
     getNextToken();
-
-  // Else if ifsym instead of begin, identifier, or call
   }
 }
 
