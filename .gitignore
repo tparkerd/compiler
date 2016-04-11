@@ -11,3 +11,6 @@ stacktrace.txt
 *.gch
 .DS_STORE
 /DS_STORE
+input.txt
+symboltable.txt
+*.txt

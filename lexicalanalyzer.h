@@ -731,20 +731,20 @@ void writeLexemeList() {
   }
 
   // Header for error list
-  fprintf(lexemeList, "%-15s%-5s%s", "\n\n\nLexeme", "\tError Type\n",
-   "___________________________________________________\n");
-  for(i = 0; i < counter; i++)
-  {
-  // If the current token threw an error, display it
-  if(tokenStorage[i].id == 34)
-    fprintf(lexemeList, "%-15s\t%s\n", tokenStorage[i].name, isError[0].name);
-  else if(tokenStorage[i].id == 35)
-    fprintf(lexemeList, "%-15s\t%s\n", tokenStorage[i].name, isError[1].name);
-  else if(tokenStorage[i].id == 36)
-    fprintf(lexemeList, "%-15s\t%s\n", tokenStorage[i].name, isError[2].name);
-  else if(tokenStorage[i].id == 37)
-    fprintf(lexemeList, "%-15s\t%s\n", tokenStorage[i].name, isError[3].name);
-  }
+  // fprintf(lexemeList, "%-15s%-5s%s", "\n\n\nLexeme", "\tError Type\n",
+  //  "___________________________________________________\n");
+  // for(i = 0; i < counter; i++)
+  // {
+  // // If the current token threw an error, display it
+  // if(tokenStorage[i].id == 34)
+  //   fprintf(lexemeList, "%-15s\t%s\n", tokenStorage[i].name, isError[0].name);
+  // else if(tokenStorage[i].id == 35)
+  //   fprintf(lexemeList, "%-15s\t%s\n", tokenStorage[i].name, isError[1].name);
+  // else if(tokenStorage[i].id == 36)
+  //   fprintf(lexemeList, "%-15s\t%s\n", tokenStorage[i].name, isError[2].name);
+  // else if(tokenStorage[i].id == 37)
+  //   fprintf(lexemeList, "%-15s\t%s\n", tokenStorage[i].name, isError[3].name);
+  // }
 
   // Close destination file
   fclose(lexemeList);

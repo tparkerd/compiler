@@ -243,13 +243,12 @@ void printOut(int operation){
         while(c != EOF){
             c = fgetc(fileTrace);
         }
-        printf("\n");
     }
     fclose(fileTrace);
 }
 
 //Goes through the MCode file you opened and prints the output
-//of all of its cycles along with the present values of the PC, 
+//of all of its cycles along with the present values of the PC,
 //BP, and SP
 void runCode(int operation, int operation2){
     int a,c,d;
@@ -273,7 +272,6 @@ void runCode(int operation, int operation2){
         else{
             printOut(operation2);
             exit(0);
-
         }
     }
 }
@@ -304,6 +302,4 @@ void pmachine(){
 
     strcpy(inputFileName,"mcode.txt");
     virtualMachine(v);
-
-    //return 0;
 }
