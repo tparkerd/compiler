@@ -1,4 +1,4 @@
-#define DEBUG 1
+#define DEBUG 0
 #define MAX_SYMBOL_TABLE_SIZE 100
 
 
@@ -81,7 +81,6 @@ void block() {
 
       // Valid number found, so assign its value
       tmp.val = atoi(t.name);
-      printf(ANSI_COLOR_PURPLE"Declare(%d, %s, %d, %d)\n"ANSI_COLOR_RESET, 1, tmp.name, tmp.val, 0);
       declareSym(1, tmp.name, tmp.val, 0);
 
     } while ( t.type == commasym );
@@ -108,7 +107,6 @@ void block() {
       // Valid id found, so assign its Name
       strcpy(tmp.name, t.name);
       tmp.val = value++;
-      printf(ANSI_COLOR_PURPLE"Declare(%d, %s, %d, %d)\n"ANSI_COLOR_RESET, 1, tmp.name, tmp.val, level);
       declareSym(2, tmp.name, tmp.val, level);
 
       getNextToken();
