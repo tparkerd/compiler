@@ -1,24 +1,3 @@
-#define DEBUG 1
-#define MAX_SYMBOL_TABLE_SIZE 100
-
-
-typedef struct symbol {
-  int kind;       // const = 1, var = 2, proc = 3
-  char name[12];  // name up to 11 characters
-  int val;        // number (ASCII value)
-  int level;      // L level
-  int addr;       // M address
-} symbol;
-
-// Global Variables
-int tokenCounter = 0;
-int level = 0;
-struct token t;
-struct token lexList[MAX_FILE_LENGTH];
-FILE* parserInput;
-FILE* symbolTable;
-struct symbol symbolList[MAX_SYMBOL_TABLE_SIZE];
-
 void parser();
 void program();
 void block();
@@ -37,6 +16,8 @@ const char* kindToType(int n);
 void createSymbolList();
 int findSym(int kind, const char* name, int val, int level);
 void declareSym(int kind, const char* name, int val, int level);
+void emit(int instruction, int l, int m);
+
 
 void parser() {
   readTokenList();
