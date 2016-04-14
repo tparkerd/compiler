@@ -11,7 +11,6 @@ void runCode(int operation, int operation2);
 void virtualMachine(int operation);
 void pmachine();
 
-
 //Takes the code file you read into it and prints into the filetrace the steps it's taking
 void codeTrace(int operation) {
     int i;

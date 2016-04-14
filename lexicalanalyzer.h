@@ -237,22 +237,22 @@ void read() {
 
 void readRawFile() {
   // Read in contents of raw file
-  FILE* ifp = fopen("input.txt", "r");
+  FILE* ifp = fopen(LA_INPUT, "r");
   // Starting index
   int i = 0;
 
   char tmp;
   // Read in all the contents of the file
   while ( fscanf(ifp, "%c", &tmp) != EOF ) {
-      rawInput[i] = tmp;
-      i++;
+    rawInput[i] = tmp;
+    i++;
   }
   fclose(ifp);
 }
 
 void deleteComments(){
   int i, j;
-  cleanInputOutput = fopen("cleaninput.txt", "w");
+  ofp = fopen(LA_OUTPUT_CLEANINPUT, "w");
 
   // For each element in the array - 2
   for(i = 0; i < MAX_FILE_LENGTH; i++)
@@ -276,9 +276,9 @@ void deleteComments(){
     // Bug fix: encoding issue where leading NULL characters would cause encoding errors
     if ( cleanInput[i] == 0 )
       continue;
-    fprintf(cleanInputOutput, "%c", cleanInput[i]);
+    fprintf(ofp, "%c", cleanInput[i]);
   }
-  fclose(cleanInputOutput);
+  fclose(ofp);
 }
 
 void scan() {
@@ -623,7 +623,7 @@ char* isDigit(int inputPosition, char* string, int length) {
 void writeLexemeTable() {
   int i;
   // Create/open destination file: lexemetable.txt
-  lexemeTable = fopen("lexemetable.txt", "w");
+  lexemeTable = fopen(LA_OUTPUT_TABLE, "w");
 
   // Header for valid tokens
   fprintf(lexemeTable, "%-15s%s%s", "Lexeme\t", "\tToken Type\n",
@@ -664,7 +664,7 @@ void writeLexemeTable() {
 void writeLexemeList() {
   int i;
   // Create/open destination file: lexemelist.txt
-  lexemeList = fopen("lexemelist.txt", "w");
+  lexemeList = fopen(LA_OUTPUT_LIST, "w");
 
   // For each token...
   for(i = 0; i < counter; i++) {
