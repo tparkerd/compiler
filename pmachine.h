@@ -1,9 +1,3 @@
-//Blake Reynolds
-//BR295815
-//COP3402
-//Assignment 1
-//Date Due: 2-8-16
-
 #define MAX_CODE_LENGTH 500
 #define MAX_LEXI_LEVELS 3
 #define MAX_STACK_HEIGHT 2000
