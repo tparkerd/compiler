@@ -336,7 +336,7 @@ void factor() {
 }
 
 void getNextToken() {
-  if ( tokenCounter > tokenCount + 1 )
+  if ( tokenCounter > tokenCount )
   {
     exit(0);
   }
@@ -613,7 +613,7 @@ const char* kindToType(int n) {
 
 void createSymbolList(){
   int c;
-  symbolTable = fopen("symboltable.txt", "w");
+  symbolTable = fopen("symlist.txt", "w");
   // Header
   fprintf(symbolTable, "%-15s\t%-15s\t%-15s\t%-15s\n", "Name", "Type", "Level", "Value");
   for(c = 0; c < tokenCount; c++)
