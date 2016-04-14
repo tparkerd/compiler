@@ -8,13 +8,13 @@
 // Constants
 ////////////////////////////////////////////////////////////////////////////////
   // Lexical Analyzer
-    #define MAX_FILE_LENGTH 25000
-    #define MAX_VARIABLE_LENGTH 11
-    #define MAX_NUM_LENGTH 5
-    #define MAX_TOKEN_SPACE 50
-    #define NUM_RESERVED_WORDS 14
-    #define NUM_SPECIAL_SYMBOLS 16
-    #define NUM_ERROR_TYPES 4
+    #define MAX_FILE_LENGTH 25000 // file buffer for "code memory"
+    #define MAX_VARIABLE_LENGTH 11  // longest an identifier can be
+    #define MAX_NUM_LENGTH 5  // longest a number can be
+    #define MAX_TOKEN_SPACE 50  // ???
+    #define NUM_RESERVED_WORDS 14 // number of known reserved words
+    #define NUM_SPECIAL_SYMBOLS 16  // number of known special symbols
+    #define NUM_ERROR_TYPES 4 // number of known lexical errors
   // Parser
     #define MAX_SYMBOL_TABLE_SIZE 100
   // VM
@@ -27,11 +27,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Files
 ////////////////////////////////////////////////////////////////////////////////
-  // VM
-    #define VM_INPUT "mcode.txt"
-    #define VM_OUTPUT "stacktrace.txt"
-    FILE *fileCode;
-    FILE *fileTrace;
   // Lexical Analyzer
     #define LA_INPUT "input.txt"
     #define LA_OUTPUT_CLEANINPUT "cleaninput.txt"
@@ -41,20 +36,20 @@
     FILE* lexemeTable;
     FILE* lexemeList;
   // Parser
+    #define PARSER_INPUT "lexemelist.txt"
+    #define PASER_OUTPUT "symlist.txt"
     #define CODE_GEN_OUTPUT "mcode.txt"
     FILE* parserInput;
     FILE* symbolTable;
+  // VM
+    #define VM_INPUT "mcode.txt"
+    #define VM_OUTPUT "stacktrace.txt"
+    FILE *fileCode;
+    FILE *fileTrace;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Structs & Enums
 ////////////////////////////////////////////////////////////////////////////////
-  // VM
-    //Instruction registers
-    typedef struct instr {
-        int OP;
-        int L;
-        int M;
-    } instruction;
   // Lexical Analyzer
     typedef enum{
       nulsym = 1, identsym, numbersym, plussym, minussym, multsym, slashsym, oddsym,
@@ -75,19 +70,17 @@
       int level;      // L level
       int addr;       // M address
     } symbol;
-
+  // VM
+    typedef struct instr {
+        int OP;
+        int L;
+        int M;
+    } instruction;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Counts, Counters, Trackers
 ////////////////////////////////////////////////////////////////////////////////
-    // VM
-    int codeSize = 0;
-    int basePointer = 1;
-    int stackPointer = 0;
-    int programCounter = 0;
-    instruction IR;
-    int stack[MAX_STACK_HEIGHT];
-    instruction code[MAX_CODE_LENGTH];
+
   // Lexical Analyzer
     char rawInput[MAX_FILE_LENGTH];
     char cleanInput[MAX_FILE_LENGTH];
@@ -105,5 +98,12 @@
     struct token t;
     struct token lexList[MAX_FILE_LENGTH];
     struct symbol symbolList[MAX_SYMBOL_TABLE_SIZE];
-
+  // VM
+    int codeSize = 0;
+    int basePointer = 1;
+    int stackPointer = 0;
+    int programCounter = 0;
+    instruction IR;
+    int stack[MAX_STACK_HEIGHT];
+    instruction code[MAX_CODE_LENGTH];
 #endif

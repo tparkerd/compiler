@@ -252,7 +252,7 @@ void readRawFile() {
 
 void deleteComments(){
   int i, j;
-  ofp = fopen(LA_OUTPUT_CLEANINPUT, "w");
+  FILE* ofp = fopen(LA_OUTPUT_CLEANINPUT, "w");
 
   // For each element in the array - 2
   for(i = 0; i < MAX_FILE_LENGTH; i++)

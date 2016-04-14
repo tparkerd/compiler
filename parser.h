@@ -594,16 +594,16 @@ const char* kindToType(int n) {
 
 void createSymbolList(){
   int c;
-  symbolTable = fopen("symlist.txt", "w");
+  FILE* ofp = fopen(PARSER_OUTPUT, "w");
   // Header
-  fprintf(symbolTable, "%-15s\t%-15s\t%-15s\t%-15s\n", "Name", "Type", "Level", "Value");
+  fprintf(ofp, "%-15s\t%-15s\t%-15s\t%-15s\n", "Name", "Type", "Level", "Value");
   for(c = 0; c < tokenCount; c++)
   {
     if (symbolList[c].kind == 0)
       break;
-    fprintf(symbolTable, "%-15s\t%-15s\t%-15d\t%-15d\n", symbolList[c].name, kindToType(symbolList[c].kind), symbolList[c].level, symbolList[c].val);
+    fprintf(ofp, "%-15s\t%-15s\t%-15d\t%-15d\n", symbolList[c].name, kindToType(symbolList[c].kind), symbolList[c].level, symbolList[c].val);
   }
-  fclose(symbolTable);
+  fclose(ofp);
 }
 
 // Looks in the symbol table to see if a symbol already exists
