@@ -1,1 +1,5 @@
-0000000000000000000000000000000000000000000000000000000000000000
+Name           	Type           	Level          	Value          
+loop_end       	const          	0              	0              
+i              	var            	0              	4              
+n              	var            	0              	5              
+s              	var            	0              	6              
