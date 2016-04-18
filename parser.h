@@ -614,7 +614,7 @@ void createSymbolList(){
   FILE* ofp = fopen(PARSER_OUTPUT_SYMLIST, "w");
   // Header
   fprintf(ofp, "%-15s\t%-15s\t%-15s\t%-15s\n", "Name", "Type", "Level", "Value");
-  for(c = 0; c < tokenCount; c++)
+  for(c = 0; c < symbolCounter; c++)
   {
     if (symbolList[c].kind == 0)
       continue;

@@ -7,70 +7,10 @@ void codegen() {
 }
 
 int gen(int instruction, int l, int m) {
-  switch(instruction) {
-    case 1:
-      asm_code[asm_line].addr = asm_line;
-      asm_code[asm_line].instruction = instruction;
-      asm_code[asm_line].l = l;
-      asm_code[asm_line].m = m;
-      break;
-    case 2:
-      asm_code[asm_line].addr = asm_line;
-      asm_code[asm_line].instruction = instruction;
-      asm_code[asm_line].l = l;
-      asm_code[asm_line].m = m;
-      break;
-    case 3:
-      asm_code[asm_line].addr = asm_line;
-      asm_code[asm_line].instruction = instruction;
-      asm_code[asm_line].l = l;
-      asm_code[asm_line].m = m;
-      break;
-    case 4:
-      asm_code[asm_line].addr = asm_line;
-      asm_code[asm_line].instruction = instruction;
-      asm_code[asm_line].l = l;
-      asm_code[asm_line].m = m;
-      break;
-    case 5:
-      asm_code[asm_line].addr = asm_line;
-      asm_code[asm_line].instruction = instruction;
-      asm_code[asm_line].l = l;
-      asm_code[asm_line].m = m;
-      break;
-    case 6:
-      asm_code[asm_line].addr = asm_line;
-      asm_code[asm_line].instruction = instruction;
-      asm_code[asm_line].l = l;
-      asm_code[asm_line].m = m;
-      break;
-    case 7:
-      asm_code[asm_line].addr = asm_line;
-      asm_code[asm_line].instruction = instruction;
-      asm_code[asm_line].l = l;
-      asm_code[asm_line].m = m;
-      break;
-    case 8:
-      asm_code[asm_line].addr = asm_line;
-      asm_code[asm_line].instruction = instruction;
-      asm_code[asm_line].l = l;
-      asm_code[asm_line].m = m;
-      break;
-    case 9:
-    case 10:
-    case 11:
-      asm_code[asm_line].addr = asm_line;
-      asm_code[asm_line].instruction = instruction;
-      asm_code[asm_line].l = l;
-      asm_code[asm_line].m = m;
-      break;
-    default:
-      asm_code[asm_line].addr = asm_line;
-      asm_code[asm_line].instruction = instruction;
-      asm_code[asm_line].l = l;
-      asm_code[asm_line].m = m;
-      break;
-  }
+  asm_code[asm_line].addr = asm_line;
+  asm_code[asm_line].instruction = instruction;
+  asm_code[asm_line].l = l;
+  asm_code[asm_line].m = m;
   asm_line++;
   return asm_line;
 }
@@ -127,9 +67,11 @@ void emit(int instruction, int l, int m) {
 void displayCodeGen() {
   int i;
   FILE* ofp = fopen(PARSER_OUTPUT_ASMCODE, "w");
+  printf("Number of asm_lines: %d\n", asm_line);
   for (i = 0; i < asm_line; i++)
   {
     printf("%*d %s %*d %*d\n", 2, asm_code[i].addr, opTrans(asm_code[i].instruction), 3, asm_code[i].l, 3, asm_code[i].m);
+    // Why does the gen function seem to insert anything into the asm_code, but should be the symbol table?
     fprintf(ofp, "%d %d %d\n", asm_code[i].instruction, asm_code[i].l, asm_code[i].m);
   }
   fclose(ofp);
