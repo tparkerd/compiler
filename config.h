@@ -37,10 +37,12 @@
     FILE* lexemeList;
   // Parser
     #define PARSER_INPUT "lexemelist.txt"
-    #define PASER_OUTPUT "symlist.txt"
-    #define CODE_GEN_OUTPUT "mcode.txt"
+    #define PARSER_OUTPUT_SYMLIST "symlist.txt"
+    #define PARSER_OUTPUT_ASMCODE "mcode.txt"
+    #define PARSER_LOG "parseoutput.txt"
     FILE* parserInput;
     FILE* symbolTable;
+    FILE* codeGenOutput;
   // VM
     #define VM_INPUT "mcode.txt"
     #define VM_OUTPUT "stacktrace.txt"
@@ -51,7 +53,7 @@
 // Structs & Enums
 ////////////////////////////////////////////////////////////////////////////////
   // Lexical Analyzer
-    typedef enum{
+    typedef enum {
       nulsym = 1, identsym, numbersym, plussym, minussym, multsym, slashsym, oddsym,
       eqlsym, neqsym, lessym, leqsym, gtrsym, geqsym, lparentsym, rparentsym, commasym,
       semicolonsym, periodsym, becomessym, beginsym, endsym, ifsym, thensym, whilesym,
@@ -70,6 +72,12 @@
       int level;      // L level
       int addr;       // M address
     } symbol;
+    typedef struct asmCode {
+      int addr;
+      int instruction;
+      int l;
+      int m;
+    } asmCode;
   // VM
     typedef struct instr {
         int OP;
@@ -93,11 +101,16 @@
     int counter;  // Counter to move along the input file's contents, character by character
     int tokenCount;  // Number of known tokens
   // Parser
-    int tokenCounter = 0;
-    int level = 0;
-    struct token t;
     struct token lexList[MAX_FILE_LENGTH];
     struct symbol symbolList[MAX_SYMBOL_TABLE_SIZE];
+    struct asmCode asm_code[MAX_FILE_LENGTH];
+    struct token t;
+    int tokenCounter = 0;
+    int level = -1;
+    int jmpCodeAddr = 0;
+    int asm_line = 0;
+    int NEXT_CODE_ADDR;
+    int symbolCounter = 0;
   // VM
     int codeSize = 0;
     int basePointer = 1;

@@ -20,7 +20,6 @@ void codeTrace(int operation) {
 }
 
 void executeCycle(int operation){
-    int value = 0, i = 0;
     switch (IR.OP) {
         case 1: //LIT - Pushes constant value M on top of the stack
             stackPointer++;
@@ -213,8 +212,6 @@ void printOut(int operation){
 //of all of its cycles along with the present values of the PC,
 //BP, and SP
 void runCode(int operation, int operation2){
-    int a,c,d;
-    char b[3];
     while (basePointer > 0){
         if (programCounter < codeSize){
             if(operation)
@@ -259,8 +256,8 @@ void virtualMachine(int operation){
 
 //Find out the MCode file name and calls virtualMachine function to open, go through, and write output to stacktrace
 void pmachine(){
-    int v;
-    char inputFileName[500];
+    int v = 0; // why are we using this? What does it do?
+    char inputFileName[MAX_CODE_LENGTH];
 
     strcpy(inputFileName,"mcode.txt");
     virtualMachine(v);
