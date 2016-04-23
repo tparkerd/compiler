@@ -1,24 +1,3 @@
-#define DEBUG 1
-#define MAX_SYMBOL_TABLE_SIZE 100
-
-
-typedef struct symbol {
-  int kind;       // const = 1, var = 2, proc = 3
-  char name[12];  // name up to 11 characters
-  int val;        // number (ASCII value)
-  int level;      // L level
-  int addr;       // M address
-} symbol;
-
-// Global Variables
-int tokenCounter = 0;
-int level = 0;
-struct token t;
-struct token lexList[MAX_FILE_LENGTH];
-FILE* parserInput;
-FILE* symbolTable;
-struct symbol symbolList[MAX_SYMBOL_TABLE_SIZE];
-
 void parser();
 void program();
 void block();
@@ -35,13 +14,16 @@ void countValidTokens();
 const char* translate(int n);
 const char* kindToType(int n);
 void createSymbolList();
-int findSym(int kind, const char* name, int val, int level);
-void declareSym(int kind, const char* name, int val, int level);
+int lookUp(const char* name, int level);
+void insertSymbol(int kind, const char* name, int val, int level, int addr);
+
 
 void parser() {
+
+  memset(symbolList, 0, sizeof(symbol) * MAX_SYMBOL_TABLE_SIZE);
   readTokenList();
   countValidTokens();
-  // displayTokenList();
+  displayTokenList();
   program();
   createSymbolList();
 }
@@ -58,16 +40,22 @@ void program() {
   {
     error(29); // no token should follow a period
   }
-  FILE* parseoutput = fopen("parseoutput.txt", "a");
-  fprintf(parseoutput, "\nInput program is syntactically correct.\n");
-  fclose(parseoutput);
+  FILE* parserLog = fopen(PARSER_LOG, "a");
+  fprintf(parserLog, "\nInput program is syntactically correct.\n");
+  fclose(parserLog);
 
+  // Why does this get inserted into the symbol table?
+  gen(11, 0, 3);
+  // fclose(codeGenOutput);
+  displayCodeGen();
 }
 
 void block() {
-  (DEBUG) ? printf(ANSI_COLOR_CYAN"Block()\n"ANSI_COLOR_RESET) : printf(" ");
-
+  level++;
+  (DEBUG) ? printf(ANSI_COLOR_CYAN"block()\n"ANSI_COLOR_RESET) : printf(" ");
   struct symbol tmp;
+  int space = 4;
+  int jmpAddr = gen(7, 0, 0);
   // Case: constant declaration
   if ( t.type == constsym )
   {
@@ -91,7 +79,7 @@ void block() {
       // Valid number found, so assign its value
       tmp.val = atoi(t.name);
       printf(ANSI_COLOR_PURPLE"Declare(%d, %s, %d, %d)\n"ANSI_COLOR_RESET, 1, tmp.name, tmp.val, 0);
-      declareSym(1, tmp.name, tmp.val, 0);
+      insertSymbol(1, tmp.name, tmp.val, 0, 0);
 
     } while ( t.type == commasym );
 
@@ -117,8 +105,9 @@ void block() {
       // Valid id found, so assign its Name
       strcpy(tmp.name, t.name);
       tmp.val = value++;
-      printf(ANSI_COLOR_PURPLE"Declare(%d, %s, %d, %d)\n"ANSI_COLOR_RESET, 1, tmp.name, tmp.val, level);
-      declareSym(2, tmp.name, tmp.val, level);
+      printf(ANSI_COLOR_PURPLE"declare identifier (%d, %s, %d, %d)\n"ANSI_COLOR_RESET, 2, tmp.name, tmp.val, level);
+      insertSymbol(2, tmp.name, tmp.val, level, 0);
+      space++;
 
       getNextToken();
     } while ( t.type == commasym );
@@ -146,12 +135,12 @@ void block() {
 
     // Set a dummy value for the offset, so we can figure it out later
     tmp.val = 0;
-    declareSym(3, tmp.name, tmp.val, level);
+    printf(ANSI_COLOR_REDP"declare procedure (%d, %s, %d, %d)\n"ANSI_COLOR_RESET, 3, tmp.name, tmp.val, level);
+    // Using asm_line as the addr may not be the best option
+    insertSymbol(3, tmp.name, tmp.val, level, asm_line);
 
     // Increase the level by one because anything after the proc was declared
     // with be at a higher level, but not including the proc itself
-    level++;
-
     getNextToken();
     block();
 
@@ -160,9 +149,14 @@ void block() {
 
     getNextToken();
 
-    level--;
   } // end procedure declaration
+
+  // Here is where the address for JMP is changed to the correct address
+  asm_code[jmpAddr].m = asm_line;
+  gen(6, 0, space); // INC, 0, space (reserve space)
   statement();
+  gen(2, 0, 0); // OPR, 0, 0 (return)
+  level--;
 }
 
 void statement() {
@@ -178,7 +172,11 @@ void statement() {
     for (i = 0; i < tokenCount; i++)
     {
       // See if the symbol exists
-      if ( strcmp(symbolList[i].name, t.name) == 0 /*&& symbolList[i].level <= level */)
+      (DEBUG) ? printf(ANSI_COLOR_CYAN"strcmp(%s, %s) && %d <= %d )\n"ANSI_COLOR_RESET, symbolList[i].name, t.name, symbolList[i].level, level ) : printf(" ");
+      // There is a chance that the 'kind' to 'type' comparison won't work.
+      // in fact, you may want to return the namespace, but then check its type
+      // separately to entire a typing error
+      if ( strcmp(symbolList[i].name, t.name) == 0 && symbolList[i].level <= level && symbolList[i].kind == t.type)
       {
         declared = 1;
         break;
@@ -199,9 +197,23 @@ void statement() {
   // If a call is found instead
   else if ( t.type == callsym )
   {
+    struct token tmpToken = t;
     getNextToken();
     if ( t.type != identsym )
       error(14); // identifier expected
+
+    // Code gen for callsym
+    // For some reason it is looking for this symbo to see if it is declared
+    // oh, gotta check that the procedure was actually declared
+    // insertSymbol(1, tmp.name, tmp.val, 0);
+    // lookUp(int kind, const char* name, int val, int level)
+    (DEBUG) ? printf(ANSI_COLOR_REDP"lookUp(3, %s, %d, %d)\n"ANSI_COLOR_RESET, t.name, atoi(t.name), level) : printf(" ");
+    int tmpIndex = lookUp(t.name, level);
+    if (tmpIndex == -1)
+      error(11); // make need new error to state that the procedure is undeclared
+
+    // Valid call was made, generate the code for it (what is the address though?)
+    gen(5, level - symbolList[tmpIndex].level, symbolList[tmpIndex].addr ); // we need this after the procedure is parsered
 
     getNextToken();
   }
@@ -236,12 +248,12 @@ void statement() {
     }
     getNextToken();
 
-    if( t.type != elsesym )
+
+    if( t.type == elsesym )
     {
-        error(28);
+      getNextToken();
+      statement();
     }
-    getNextToken();
-    statement();
     getNextToken();
   }
 
@@ -272,6 +284,12 @@ void statement() {
     if ( t.type != identsym )
       error(14); // identifier expected
 
+    // Look for the symbol in the symbol table to make sure it is declared
+    // STARTED THIS FOR LIT, BUT NOT FINISHED
+    // symbolIndex = lookUp(t.name, level);
+    // if (symbolIndex == -1)
+    //   error()
+
     getNextToken();
   }
 }
@@ -295,18 +313,38 @@ void condition() {
 
 void expression() {
   (DEBUG) ? printf(ANSI_COLOR_CYAN"expression()\n"ANSI_COLOR_RESET) : printf(" ");
-  if ( t.type == plussym || t.type == minussym )
-    getNextToken();
+  // Trying to do an op code gen
+  tokenType tmpOp;
 
-  term();
+  if ( t.type == plussym || t.type == minussym )
+  {
+    tmpOp = t.type;
+    if ( tmpOp == minussym )
+    {
+      getNextToken();
+      term();
+      gen(2, 0, 1);
+    }
+
+  }
+  else // not sure why this would need to be else, but it might get an extra w/o being extra
+    term();
   while ( t.type == plussym || t.type == minussym )
   {
+    tmpOp = t.type;
     getNextToken();
     term();
+
+    if ( tmpOp == plussym )
+      gen(2, 0, 2);
+    else
+      gen(2, 0, 3);
+
   }
 }
 
 void term() {
+  (DEBUG) ? printf(ANSI_COLOR_CYAN"term()\n"ANSI_COLOR_RESET) : printf(" ");
   factor();
   while ( t.type == multsym || t.type == slashsym )
   {
@@ -316,8 +354,21 @@ void term() {
 }
 
 void factor() {
+  (DEBUG) ? printf(ANSI_COLOR_CYAN"factor()\n"ANSI_COLOR_RESET) : printf(" ");
+
+  int symbolIndex;
+
   if ( t.type == identsym )
+  {
+    symbolIndex = lookUp(t.name, level);
+
+
     getNextToken();
+  }
+
+
+
+
 
   else if ( t.type == numbersym )
     getNextToken();
@@ -342,7 +393,7 @@ void getNextToken() {
   }
   t = lexList[tokenCounter];
   tokenCounter++;
-  (DEBUG) ? printf(ANSI_COLOR_GREEN"Token (%d) %s\n"ANSI_COLOR_RESET, t.id, translate(t.id)) : printf(" ");
+  (DEBUG) ? printf(ANSI_COLOR_GREEN"[%d] %s (%s)\n"ANSI_COLOR_RESET, t.id, translate(t.id), t.name) : printf(" ");
 }
 
 void error(int e) {
@@ -613,16 +664,16 @@ const char* kindToType(int n) {
 
 void createSymbolList(){
   int c;
-  symbolTable = fopen("symlist.txt", "w");
+  FILE* ofp = fopen(PARSER_OUTPUT_SYMLIST, "w");
   // Header
-  fprintf(symbolTable, "%-15s\t%-15s\t%-15s\t%-15s\n", "Name", "Type", "Level", "Value");
-  for(c = 0; c < tokenCount; c++)
+  fprintf(ofp, "%-15s\t%-15s\t%-15s\t%-15s\n", "Name", "Type", "Level", "Value");
+  for(c = 0; c < symbolCounter; c++)
   {
     if (symbolList[c].kind == 0)
-      break;
-    fprintf(symbolTable, "%-15s\t%-15s\t%-15d\t%-15d\n", symbolList[c].name, kindToType(symbolList[c].kind), symbolList[c].level, symbolList[c].val);
+      continue;
+    fprintf(ofp, "%-15s\t%-15s\t%-15d\t%-15d\n", symbolList[c].name, kindToType(symbolList[c].kind), symbolList[c].level, symbolList[c].val);
   }
-  fclose(symbolTable);
+  fclose(ofp);
 }
 
 // Looks in the symbol table to see if a symbol already exists
@@ -630,35 +681,41 @@ void createSymbolList(){
 // declare "var i" in a two separa... something something
 // returns either the location of the existing sym, or the next
 // empty location in "symbol memory": the symbol list array.
-int findSym(int kind, const char* name, int val, int level) {
+int lookUp( const char* name, int level) {
+  // Gotta do it backwards instead!
   int i;
-  for ( i = 0; i < MAX_SYMBOL_TABLE_SIZE; i++ )
+  for ( i = symbolCounter; i >= 0; i-- )
   {
-    // If we hit an empty block, the item doesn't exist, so
-    // return the index of the symbol table to be used to insert a new
-    // symbol
-    if ( symbolList[i].kind == 0 )
-      return i;
-
     // We've got a match!
     // Check if...
-    // Same kind
     // Subprocedure (greater level) or equal to current level (may need to just be greater so sibling procs don't try to redeclare variables)
-    // Same address (may be unnecessary), not sure how this works
     // Same name
-    if ( symbolList[i].kind == kind && symbolList[i].level >= level && (strcmp(symbolList[i].name, name) == 0) )
+    if ( symbolList[i].level >= level && (strcmp(symbolList[i].name, name) == 0) )
       return i;
   }
-  return 0;
+
+  if ( symbolCounter + 1 < MAX_SYMBOL_TABLE_SIZE )
+  {
+    printf(ANSI_COLOR_DARKRED"%d\n"ANSI_COLOR_RESET, symbolCounter);
+    return symbolCounter + 1;
+  }
+  else
+  {
+    printf(ANSI_COLOR_DARKRED"%d\n"ANSI_COLOR_RESET, 0);
+    return -1;
+  }
+
 }
 
 // If the symbol does not exist yet,
-void declareSym(int kind, const char* name, int val, int level) {
+void insertSymbol(int kind, const char* name, int val, int level, int addr) {
   // Find the location in the symbol list, or find an empty slot for it
-  int location = findSym(kind, name, val, level);
+  int location = lookUp(name, level);
+  symbolCounter++;
 
   symbolList[location].kind = kind;
   strcpy(symbolList[location].name, name);
   symbolList[location].val = val;
   symbolList[location].level = level;
+  symbolList[location].addr = addr;
 }

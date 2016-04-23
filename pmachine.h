@@ -1,40 +1,3 @@
-//Blake Reynolds
-//BR295815
-//COP3402
-//Assignment 1
-//Date Due: 2-8-16
-
-#define MAX_CODE_LENGTH 500
-#define MAX_LEXI_LEVELS 3
-#define MAX_STACK_HEIGHT 2000
-#define MCODE "mcode.txt"
-#define TRACE "stacktrace.txt"
-
-//Char arrays to hold instructions and op codes
-const char* INSTRUCTSTRINGS[] = {"", "LIT", "OPR", "LOD", "STO", "CAL", "INC", "JMP", "JPC", "SIO", "SIO", "SIO"};
-const char* OPSTRINGS[] = {"RET", "NEG", "ADD", "SUB", "MUL", "DIV", "ODD", "MOD", "EQL", "NEQ", "LSS", "LEQ", "GTR", "GEQ"};
-
-//Instruction registers
-typedef struct instr{
-    int OP;
-    int L;
-    int M;
-} instruction;
-
-//Global variables
-int basePointer = 1;
-int stackPointer = 0;
-int programCounter = 0;
-instruction IR;
-
-FILE *fileCode;
-FILE *fileTrace;
-
-int stack[MAX_STACK_HEIGHT];
-instruction code[MAX_CODE_LENGTH];
-
-int codeSize = 0;
-
 //function prototypes
 void codeTrace();
 void executeCycle(int operation);
@@ -48,7 +11,6 @@ void runCode(int operation, int operation2);
 void virtualMachine(int operation);
 void pmachine();
 
-
 //Takes the code file you read into it and prints into the filetrace the steps it's taking
 void codeTrace(int operation) {
     int i;
@@ -58,7 +20,6 @@ void codeTrace(int operation) {
 }
 
 void executeCycle(int operation){
-    int value = 0, i = 0;
     switch (IR.OP) {
         case 1: //LIT - Pushes constant value M on top of the stack
             stackPointer++;
@@ -131,7 +92,7 @@ int getBase(int basePlace, int base){
 //Opens up the MCode file
 void loadFile(){
     int OP = 0, L, M, i = 0;
-    fileCode = fopen(MCODE, "r");
+    fileCode = fopen(VM_INPUT, "r");
     while(fscanf(fileCode, "%i", &OP) == 1){
         fscanf(fileCode, "%i", &L);
         fscanf(fileCode, "%i", &M);
@@ -234,7 +195,7 @@ void pipeLaying(int operation){
 //Opens the trace file and prints to it
 void printOut(int operation){
     char c, readIn[MAX_CODE_LENGTH];
-    fileTrace = fopen(TRACE, "r");
+    fileTrace = fopen(VM_OUTPUT, "r");
     if(operation){
         fscanf(fileTrace,"%s",readIn);
         fscanf(fileTrace,"%s",readIn);
@@ -251,8 +212,6 @@ void printOut(int operation){
 //of all of its cycles along with the present values of the PC,
 //BP, and SP
 void runCode(int operation, int operation2){
-    int a,c,d;
-    char b[3];
     while (basePointer > 0){
         if (programCounter < codeSize){
             if(operation)
@@ -283,9 +242,9 @@ void virtualMachine(int operation){
     stack[2] = 0;
     stack[3] = 0;
 
-    fileCode = fopen(MCODE,"r");
+    fileCode = fopen(VM_INPUT,"r");
     loadFile();
-    fileTrace = fopen(TRACE,"w");
+    fileTrace = fopen(VM_OUTPUT,"w");
 
     codeTrace(0);
 
@@ -297,8 +256,8 @@ void virtualMachine(int operation){
 
 //Find out the MCode file name and calls virtualMachine function to open, go through, and write output to stacktrace
 void pmachine(){
-    int v;
-    char inputFileName[500];
+    int v = 0; // why are we using this? What does it do?
+    char inputFileName[MAX_CODE_LENGTH];
 
     strcpy(inputFileName,"mcode.txt");
     virtualMachine(v);
