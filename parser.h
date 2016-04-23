@@ -14,7 +14,7 @@ void countValidTokens();
 const char* translate(int n);
 const char* kindToType(int n);
 void createSymbolList();
-int lookUp(int kind, const char* name, int val, int level);
+int lookUp(const char* name, int level);
 void insertSymbol(int kind, const char* name, int val, int level, int addr);
 
 
@@ -208,8 +208,8 @@ void statement() {
     // insertSymbol(1, tmp.name, tmp.val, 0);
     // lookUp(int kind, const char* name, int val, int level)
     (DEBUG) ? printf(ANSI_COLOR_REDP"lookUp(3, %s, %d, %d)\n"ANSI_COLOR_RESET, t.name, atoi(t.name), level) : printf(" ");
-    int tmpIndex = lookUp(3, t.name, atoi(t.name), level);
-    if (tmpIndex == 0)
+    int tmpIndex = lookUp(t.name, level);
+    if (tmpIndex == -1)
       error(11); // make need new error to state that the procedure is undeclared
 
     // Valid call was made, generate the code for it (what is the address though?)
@@ -284,6 +284,11 @@ void statement() {
     if ( t.type != identsym )
       error(14); // identifier expected
 
+    // Look for the symbol in the symbol table to make sure it is declared
+    symbolIndex = lookUp(t.name, level);
+    if (symbolIndex == -1)
+      error()
+
     getNextToken();
   }
 }
@@ -354,7 +359,7 @@ void factor() {
 
   if ( t.type == identsym )
   {
-    symbolIndex = lookUp()
+    symbolIndex = lookUp(t.name, level);
 
 
     getNextToken();
@@ -675,31 +680,16 @@ void createSymbolList(){
 // declare "var i" in a two separa... something something
 // returns either the location of the existing sym, or the next
 // empty location in "symbol memory": the symbol list array.
-int lookUp(int kind, const char* name, int val, int level) {
+int lookUp( const char* name, int level) {
   // Gotta do it backwards instead!
   int i;
   for ( i = symbolCounter; i >= 0; i-- )
   {
-    if ( symbolList[i].kind == kind )
-    {
-      (DEBUG) ? printf(ANSI_COLOR_CYAN"KIND match\n"ANSI_COLOR_RESET) : printf(" ");
-      if ( symbolList[i].level >= level )
-      {
-        (DEBUG) ? printf(ANSI_COLOR_CYAN"LEVEL >=\n"ANSI_COLOR_RESET) : printf(" ");
-        if ( strcmp(symbolList[i].name, name) == 0 )
-        {
-          (DEBUG) ? printf(ANSI_COLOR_CYAN"\"%s\" match\n"ANSI_COLOR_RESET, name) : printf(" ");
-        }
-      }
-    }
-
     // We've got a match!
     // Check if...
-    // Same kind
     // Subprocedure (greater level) or equal to current level (may need to just be greater so sibling procs don't try to redeclare variables)
-    // Same address (may be unnecessary), not sure how this works
     // Same name
-    if ( symbolList[i].kind == kind && symbolList[i].level >= level && (strcmp(symbolList[i].name, name) == 0) )
+    if ( symbolList[i].level >= level && (strcmp(symbolList[i].name, name) == 0) )
       return i;
   }
 
@@ -711,7 +701,7 @@ int lookUp(int kind, const char* name, int val, int level) {
   else
   {
     printf(ANSI_COLOR_DARKRED"%d\n"ANSI_COLOR_RESET, 0);
-    return 0;
+    return -1;
   }
 
 }
@@ -719,7 +709,7 @@ int lookUp(int kind, const char* name, int val, int level) {
 // If the symbol does not exist yet,
 void insertSymbol(int kind, const char* name, int val, int level, int addr) {
   // Find the location in the symbol list, or find an empty slot for it
-  int location = lookUp(kind, name, val, level);
+  int location = lookUp(name, level);
   symbolCounter++;
 
   symbolList[location].kind = kind;
