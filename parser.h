@@ -285,9 +285,10 @@ void statement() {
       error(14); // identifier expected
 
     // Look for the symbol in the symbol table to make sure it is declared
-    symbolIndex = lookUp(t.name, level);
-    if (symbolIndex == -1)
-      error()
+    // STARTED THIS FOR LIT, BUT NOT FINISHED
+    // symbolIndex = lookUp(t.name, level);
+    // if (symbolIndex == -1)
+    //   error()
 
     getNextToken();
   }
