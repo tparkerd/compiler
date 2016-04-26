@@ -111,6 +111,7 @@
     int asm_line = 0;
     int NEXT_CODE_ADDR;
     int symbolCounter = 0;
+    int tmpM = 0;
   // VM
     int codeSize = 0;
     int basePointer = 1;

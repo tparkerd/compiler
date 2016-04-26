@@ -1,4 +1,3 @@
-void emit(int instruction, int l, int m);
 int gen(int instruction, int l, int m);
 const char* opTrans(int type);
 
@@ -7,61 +6,13 @@ void codegen() {
 }
 
 int gen(int instruction, int l, int m) {
+  ((DEBUG) ? printf(ANSI_COLOR_YELLOW"gen(%s, %d, %d)\n"ANSI_COLOR_RESET, opTrans(instruction), l, m) : printf(" "));
   asm_code[asm_line].addr = asm_line;
   asm_code[asm_line].instruction = instruction;
   asm_code[asm_line].l = l;
   asm_code[asm_line].m = m;
   asm_line++;
   return asm_line;
-}
-
-void emit(int instruction, int l, int m) {
-  FILE* ofp = fopen("asm.s", "a");
-  switch(instruction) {
-    case 1:
-      printf("00%d LIT\t%d\t%d\n", asm_line, l, m);
-      fprintf(ofp, "00%d LIT\t%d\t%d\n", asm_line, l, m);
-      break;
-    case 2:
-      printf("00%d\tOPR\t%d\t%d\n", asm_line, l, m);
-      fprintf(ofp, "00%d\tOPR\t%d\t%d\n", asm_line, l, m);
-      break;
-    case 3:
-      printf("00%d\tLOD\t%d\t%d\n", asm_line, l, m);
-      fprintf(ofp, "00%d\tLOD\t%d\t%d\n", asm_line, l, m);
-      break;
-    case 4:
-      printf("00%d\tSTO\t%d\t%d\n", asm_line, l, m);
-      fprintf(ofp, "00%d\tSTO\t%d\t%d\n", asm_line, l, m);
-      break;
-    case 5:
-      printf("00%d\tCAL\t%d\t%d\n", asm_line, l, m);
-      fprintf(ofp, "00%d\tCAL\t%d\t%d\n", asm_line, l, m);
-      break;
-    case 6:
-      printf("00%d\tINC\t%d\t%d\n", asm_line, l, m);
-      fprintf(ofp, "00%d\tINC\t%d\t%d\n", asm_line, l, m);
-      break;
-    case 7:
-      printf("00%d\tJMP\t%d\t%d\n", asm_line, l, m);
-      fprintf(ofp, "00%d\tJMP\t%d\t%d\n", asm_line, l, m);
-      break;
-    case 8:
-      printf("00%d\tJPC\t%d\t%d\n", asm_line, l, m);
-      fprintf(ofp, "00%d\tJPC\t%d\t%d\n", asm_line, l, m);
-      break;
-    case 9:
-    case 10:
-    case 11:
-      printf("00%d\tSIO\t%d\t%d\n", asm_line, l, m);
-      fprintf(ofp, "00%d\tSIO\t%d\t%d\n", asm_line, l, m);
-      break;
-    default:
-      printf("00%d\tUNKNOWN OP\t%d\t%d\n", asm_line, l, m);
-      fprintf(ofp, "00%d\tUNKNOWN OP\t%d\t%d\n", asm_line, l, m);
-      break;
-  }
-  fclose(ofp);
 }
 
 void displayCodeGen() {
