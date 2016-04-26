@@ -17,7 +17,6 @@ void createSymbolList();
 int lookUp(const char* name, int level);
 void insertSymbol(int kind, const char* name, int val, int level, int addr);
 
-//int tmpM = 0;
 
 
 void parser() {
@@ -56,10 +55,11 @@ void block() {
   level++;
   (DEBUG) ? printf(ANSI_COLOR_CYAN"block()\n"ANSI_COLOR_RESET) : printf(" ");
   struct symbol tmp;
-  //int jmpAddr = gen(7, 0, 0);
   int space = 4;
-  int tmpBPos = gen(7, 0, 0), tmpIndex;
-  //tmpM = 0;
+  int tmpBPos = asm_line;
+  gen(7, 0, 0);
+  int tmpIndex;
+  tmpM = 0;
   // Case: constant declaration
   if ( t.type == constsym )
   {
@@ -82,7 +82,7 @@ void block() {
 
       // Valid number found, so assign its value
       tmp.val = atoi(t.name);
-      printf(ANSI_COLOR_PURPLE"Declare(%d, %s, %d, %d)\n"ANSI_COLOR_RESET, 1, tmp.name, tmp.val, 0);
+      printf(ANSI_COLOR_PURPLE"Declare(const, %s, %d, %d, %d)\n"ANSI_COLOR_RESET, tmp.name, tmp.val, 0, 0);
       insertSymbol(1, tmp.name, tmp.val, 0, 0);
 
     } while ( t.type == commasym );
@@ -101,7 +101,6 @@ void block() {
   // Case: variable declaration
   if ( t.type == varsym )
   {
-    int value = 4;
     do
     {
       getNextToken();
@@ -110,10 +109,12 @@ void block() {
 
       // Valid id found, so assign its Name
       strcpy(tmp.name, t.name);
-      tmp.val = value++;
-      printf(ANSI_COLOR_PURPLE"declare identifier (%d, %s, %d, %d)\n"ANSI_COLOR_RESET, 2, tmp.name, tmp.val, level);
-      insertSymbol(2, tmp.name, tmp.val + 4, level, 0);
+      printf(ANSI_COLOR_PURPLE"declare identifier (var, %s, %d, %d, %d)\n"ANSI_COLOR_RESET, tmp.name, space, level, space);
+      insertSymbol(2, tmp.name, space, level, space);
       space++;
+      // (int kind, const char* name, int val, int level, int addr)
+      // (int kind, Token t, int L, int M, int val)
+      // pushSymTable(2, currentToken, lexLevel, currentM+4, 0);
 
       getNextToken();
     } while ( t.type == commasym );
@@ -125,7 +126,7 @@ void block() {
     getNextToken();
   } // end variable declaration
 
-  //tmp.val = tmp.val;
+  tmpIndex = tmpM;
 
   // Case: procedure declaration
   while ( t.type == procsym )
@@ -143,9 +144,9 @@ void block() {
 
     // Set a dummy value for the offset, so we can figure it out later
     //tmp.val = 0;
-    printf(ANSI_COLOR_REDP"declare procedure (%d, %s, %d, %d)\n"ANSI_COLOR_RESET, 3, tmp.name, tmp.val, level);
+    printf(ANSI_COLOR_REDP"declare procedure (proc, %s, %d, %d, %d)\n"ANSI_COLOR_RESET, tmp.name, -1, level, asm_line );
     // Using asm_line as the addr may not be the best option
-    insertSymbol(3, tmp.name, tmp.val, level, asm_line);
+    insertSymbol(3, tmp.name, asm_line, level, asm_line);
 
     // Increase the level by one because anything after the proc was declared
     // with be at a higher level, but not including the proc itself
@@ -154,9 +155,9 @@ void block() {
 
     if ( t.type != semicolonsym )
       error(5); // expected semicolon
-    // else{
+    // else
      	//gen(9, 0, 2);
-    // }
+
     getNextToken();
   } // end procedure declaration
 
@@ -164,52 +165,47 @@ void block() {
 
   // Here is where the address for JMP is changed to the correct address
   asm_code[tmpBPos].m = asm_line;
-  gen(6, 0, tmp.val); // INC, 0, space (reserve space)
+  gen(6, 0, space); // INC, 0, space (reserve space)
   statement();
-  gen(2, 0, 0); // OPR, 0, 0 (return)
+  // Only return if it is not the end of the file (so when the t.type != period)
+  // a procedure end will end with a semicolon
+  if (t.type == semicolonsym)
+    gen(2, 0, 0); // OPR, 0, 0 (return)
   level--;
 }
 
 void statement() {
   (DEBUG) ? printf(ANSI_COLOR_CYAN"statement()\n"ANSI_COLOR_RESET) : printf(" ");
   // If an identifier is found
-  int identIndex, symIndex, tmpIndex, tmpIndex2, tmpBlockIndex;
+  int identIndex, symIndex, tmpIndex, tmpIndex2, tmpBlockIndex, identOffset;
   if ( t.type == identsym )
   {
   	int symIndex = lookUp(t.name, level);
     // Check if the idenfier has already been declared
     // Assume it has not been declared
-    int declared = 0;
-    int i;
-    // Search the symbolList so far for the symbol
-    for (i = 0; i < tokenCount; i++)
-    {
-      // See if the symbol exists
-      (DEBUG) ? printf(ANSI_COLOR_CYAN"strcmp(%s, %s) && %d <= %d )\n"ANSI_COLOR_RESET, symbolList[i].name, t.name, symbolList[i].level, level ) : printf(" ");
-      // There is a chance that the 'kind' to 'type' comparison won't work.
-      // in fact, you may want to return the namespace, but then check its type
-      // separately to entire a typing error
-      if ( strcmp(symbolList[i].name, t.name) == 0 && symbolList[i].level <= level && symbolList[i].kind == t.type)
-      {
-        declared = 1;
-        break;
-      }
-    }
+
     // If the variable was not declared, throw and error
-    if (!declared)
+    if (symIndex == -1)
       error(11); // undeclared var found
+    else if ( symbolList[symIndex].kind == 1 )
+      error(342); // assignment to const/proc not valid
 
-  	identIndex = symbolList[tmpIndex].addr;
-
+    printf("symIndex: %d, symbolList[%d]: %d\n", symIndex, symIndex, symbolList[symIndex].val);
+  	identOffset = symbolList[symIndex].addr;
 
     getNextToken();
     if ( t.type != becomessym )
-      error(26); // expected becomes
+    {
+      if ( t. type == eqlsym )
+        error(1); // use := instead of =
+      else
+        error(26); // expected becomes
+    }
 
     getNextToken();
     expression();
 
-    gen(4, level - symbolList[tmpIndex].level, identIndex); 
+    gen(4, level - symbolList[symIndex].level, identOffset); // may be wrong
   }
   // If a call is found instead
   else if ( t.type == callsym )
@@ -222,9 +218,6 @@ void statement() {
     // Code gen for callsym
     // For some reason it is looking for this symbo to see if it is declared
     // oh, gotta check that the procedure was actually declared
-    // insertSymbol(1, tmp.name, tmp.val, 0);
-    // lookUp(int kind, const char* name, int val, int level)
-    (DEBUG) ? printf(ANSI_COLOR_REDP"lookUp(3, %s, %d, %d)\n"ANSI_COLOR_RESET, t.name, atoi(t.name), level) : printf(" ");
     symIndex = lookUp(t.name, level);
     if (symIndex == -1)
       error(11); // make need new error to state that the procedure is undeclared
@@ -254,14 +247,12 @@ void statement() {
   {
     getNextToken();
     condition();
-    if ( t.type != thensym ){
+    if ( t.type != thensym )
       error(16); // then expected
-    }
 
     getNextToken();
-    //int tmpIndex = symbolList[]
     tmpBlockIndex = asm_line;
-    gen(8, 0, 0);
+    gen(8, 0, 0); // Why is this JPC and not a JMP?
 
     statement();
     asm_code[tmpBlockIndex].m = asm_line;
@@ -306,12 +297,13 @@ void statement() {
     if ( t.type != identsym )
       error(14); // identifier expected
 
+    symIndex = lookUp(t.name, level);
+
     getNextToken();
 
-    gen(9, 0, 0);
+    gen(9, 0, 1);
 
     gen(4, 0, symbolList[symIndex].addr);
-
   }
   // If a write is found instead of identifier or call
   else if ( t.type == writesym )
@@ -319,22 +311,21 @@ void statement() {
     getNextToken();
     if ( t.type != identsym )
       error(14); // identifier expected
-    if( t.type == identsym )
-    	symIndex = lookUp(t.name, level);
-    // else// if(t.type == identsym)
-    // {
-    // Look for the symbol in the symbol table to make sure it is declared
-    // STARTED THIS FOR LIT, BUT NOT FINISHED
-    // symbolIndex = lookUp(t.name, level);
-    // if (symbolIndex == -1)
-    //   error()
-    getNextToken();
-    if(symbolList[symIndex].kind == 1)
-    	gen(1, 0, symbolList[symIndex].val);
     else
-    	gen(3, 0, symbolList[symIndex].addr);
+    {
+      symIndex = lookUp(t.name, level);
+      if ( symIndex == -1 )
+        error(15);
 
-    	gen(9, 0, 0);
+      getNextToken();
+      if(symbolList[symIndex].kind == 1)
+        gen(1, 0, symbolList[symIndex].val);
+      else
+        gen(3, 0, symbolList[symIndex].val);
+
+      gen(9, 0, 0);
+    }
+
   }
 }
 
@@ -420,10 +411,9 @@ void factor() {
 
     if(symbolList[symIndex].kind == 1)
     	gen(1, 0, symbolList[symIndex].val);
-    else{
-    	gen(3, symbolList[symIndex].level, symbolList[symIndex].addr);
-    	symbolList[symIndex].level = symbolList[symIndex].level + 1;
-    }
+    else
+    	gen(3, level - symbolList[symIndex].level, symbolList[symIndex].val);
+
     getNextToken();
 	}
 
@@ -726,12 +716,12 @@ void createSymbolList(){
   int c;
   FILE* ofp = fopen(PARSER_OUTPUT_SYMLIST, "w");
   // Header
-  fprintf(ofp, "%-15s\t%-15s\t%-15s\t%-15s\n", "Name", "Type", "Level", "Value");
+  fprintf(ofp, "%-15s\t%-15s\t%-15s\t%-15s\t%-15s\n", "Name", "Type", "Level", "Value", "Addr");
   for(c = 0; c < symbolCounter + 1; c++)
   {
     if (symbolList[c].kind == 0)
       continue;
-    fprintf(ofp, "%-15s\t%-15s\t%-15d\t%-15d\n", symbolList[c].name, kindToType(symbolList[c].kind), symbolList[c].level, symbolList[c].val);
+    fprintf(ofp, "%-15s\t%-15s\t%-15d\t%-15d\t%-15d\n", symbolList[c].name, kindToType(symbolList[c].kind), symbolList[c].level, symbolList[c].val, symbolList[c].addr);
   }
   fclose(ofp);
 }
@@ -744,43 +734,59 @@ void createSymbolList(){
 int lookUp( const char* name, int level) {
   // Gotta do it backwards instead!
   int i;
-  for ( i = symbolCounter; i >= 0; i-- )
-  {
-    // We've got a match!
-    // Check if...
-    // Subprocedure (greater level) or equal to current level (may need to just be greater so sibling procs don't try to redeclare variables)
-    // Same name
-    if ( symbolList[i].level >= level && (strcmp(symbolList[i].name, name) == 0) )
-      return i;
-  }
 
-  if ( symbolCounter + 1 < MAX_SYMBOL_TABLE_SIZE )
+  while ( level != -1 )
   {
-    printf(ANSI_COLOR_DARKRED"%d\n"ANSI_COLOR_RESET, symbolCounter);
-    return symbolCounter + 1;
+    for ( i = symbolCounter - 1; i >= 0; i-- )
+    {
+      // We've got a match!
+      // Check if...
+      // Subprocedure (greater level) or equal to current level (may need to just be greater so sibling procs don't try to redeclare variables)
+      // Same name
+      // Also, make sure it is not a procedure
+      if ( symbolList[i].level == level && (strcmp(symbolList[i].name, name) == 0) && ( symbolList[i].addr != -1) )
+      {
+        (DEBUG) ? printf(ANSI_COLOR_REDP"lookUp(name, level) = lookUp(%s, %d)\n"ANSI_COLOR_RESET, t.name, level) : printf(" ");
+        (DEBUG) ? printf(ANSI_COLOR_CYAN"[name, level, value, addr]: (%s, %d, %d, %d)\n"ANSI_COLOR_RESET, symbolList[i].name, symbolList[i].level, symbolList[i].val, symbolList[i].addr) : printf(" ");
+        return i;
+      }
+    }
+    level--;
   }
-  else
-  {
-    printf(ANSI_COLOR_DARKRED"%d\n"ANSI_COLOR_RESET, 0);
-    return -1;
-  }
+  return -1;
+
+  //
+  //
+  // if ( symbolCounter + 1 < MAX_SYMBOL_TABLE_SIZE )
+  // {
+  //   printf(ANSI_COLOR_DARKRED"%d\n"ANSI_COLOR_RESET, symbolCounter);
+  //   return symbolCounter + 1;
+  // }
+  // else
+  // {
+  //   return -1;
+  // }
 
 }
 
 // If the symbol does not exist yet,
 void insertSymbol(int kind, const char* name, int val, int level, int addr) {
   // Find the location in the symbol list, or find an empty slot for it
-  int location = lookUp(name, level);
-  symbolCounter++;
+  int location = symbolCounter;
+
+  // Make sure that there was an available slot for the new symbol
+  // This may need to be used to throw an error where there is a memory overflow
+  if ( location != -1 )
+    symbolCounter++;
+
+  // If the symbol happens to be a var, we will need to increment the current M value
+  // to maintain the correct JMP addresses
+  if(symbolList[location].kind == 2)
+    tmpM++;
 
   symbolList[location].kind = kind;
   strcpy(symbolList[location].name, name);
   symbolList[location].val = val;
   symbolList[location].level = level;
   symbolList[location].addr = addr;
-
-  if(symbolList[location].kind == 2)
-  {
-  	val = val + 1;
-  }
 }
