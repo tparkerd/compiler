@@ -82,7 +82,7 @@ void block() {
 
       // Valid number found, so assign its value
       tmp.val = atoi(t.name);
-      printf(ANSI_COLOR_PURPLE"Declare(%d, %s, %d, %d)\n"ANSI_COLOR_RESET, 1, tmp.name, tmp.val, 0);
+      printf(ANSI_COLOR_PURPLE"Declare(const, %s, %d, %d, %d)\n"ANSI_COLOR_RESET, tmp.name, tmp.val, 0, 0);
       insertSymbol(1, tmp.name, tmp.val, 0, 0);
 
     } while ( t.type == commasym );
@@ -109,9 +109,9 @@ void block() {
 
       // Valid id found, so assign its Name
       strcpy(tmp.name, t.name);
-      tmp.val = space++;
-      printf(ANSI_COLOR_PURPLE"declare identifier (%d, %s, %d, %d)\n"ANSI_COLOR_RESET, 2, tmp.name, tmp.val, level);
-      insertSymbol(2, tmp.name, 0, level, tmpM + 4);
+      printf(ANSI_COLOR_PURPLE"declare identifier (var, %s, %d, %d, %d)\n"ANSI_COLOR_RESET, tmp.name, space, level, space);
+      insertSymbol(2, tmp.name, space, level, space);
+      space++;
       // (int kind, const char* name, int val, int level, int addr)
       // (int kind, Token t, int L, int M, int val)
       // pushSymTable(2, currentToken, lexLevel, currentM+4, 0);
@@ -144,9 +144,9 @@ void block() {
 
     // Set a dummy value for the offset, so we can figure it out later
     //tmp.val = 0;
-    printf(ANSI_COLOR_REDP"declare procedure (%d, %s, %d, %d)\n"ANSI_COLOR_RESET, 3, tmp.name, tmp.val, level);
+    printf(ANSI_COLOR_REDP"declare procedure (proc, %s, %d, %d, %d)\n"ANSI_COLOR_RESET, tmp.name, -1, level, asm_line );
     // Using asm_line as the addr may not be the best option
-    insertSymbol(3, tmp.name, tmp.val, level, asm_line);
+    insertSymbol(3, tmp.name, -1, level, asm_line);
 
     // Increase the level by one because anything after the proc was declared
     // with be at a higher level, but not including the proc itself
@@ -187,8 +187,11 @@ void statement() {
     // If the variable was not declared, throw and error
     if (symIndex == -1)
       error(11); // undeclared var found
+    else if ( symbolList[symIndex].kind == 1 )
+      error(342); // assignment to const/proc not valid
 
-  	identIndex = symbolList[tmpIndex].addr;
+    printf("THIS IS ME! %d <- %d\n", symIndex, symbolList[symIndex].val);
+  	identIndex = symbolList[symIndex].val;
 
     getNextToken();
     if ( t.type != becomessym )
@@ -197,7 +200,7 @@ void statement() {
     getNextToken();
     expression();
 
-    gen(4, level - symbolList[tmpIndex].level, identIndex);
+    gen(4, symbolList[symIndex].level, identIndex);
   }
   // If a call is found instead
   else if ( t.type == callsym )
@@ -210,9 +213,6 @@ void statement() {
     // Code gen for callsym
     // For some reason it is looking for this symbo to see if it is declared
     // oh, gotta check that the procedure was actually declared
-    // insertSymbol(1, tmp.name, tmp.val, 0);
-    // lookUp(int kind, const char* name, int val, int level)
-    (DEBUG) ? printf(ANSI_COLOR_REDP"lookUp(%s, %d, %d)\n"ANSI_COLOR_RESET, t.name, atoi(t.name), level) : printf(" ");
     symIndex = lookUp(t.name, level);
     if (symIndex == -1)
       error(11); // make need new error to state that the procedure is undeclared
@@ -292,12 +292,13 @@ void statement() {
     if ( t.type != identsym )
       error(14); // identifier expected
 
+    symIndex = lookUp(t.name, level);
+
     getNextToken();
 
     gen(9, 0, 1);
 
-    gen(4, 0, symbolList[symIndex].addr);
-
+    gen(4, 0, symbolList[symIndex].val);
   }
   // If a write is found instead of identifier or call
   else if ( t.type == writesym )
@@ -315,7 +316,7 @@ void statement() {
       if(symbolList[symIndex].kind == 1)
         gen(1, 0, symbolList[symIndex].val);
       else
-        gen(3, 0, symbolList[symIndex].addr);
+        gen(3, 0, symbolList[symIndex].val);
 
       gen(9, 0, 0);
     }
@@ -406,7 +407,7 @@ void factor() {
     if(symbolList[symIndex].kind == 1)
     	gen(1, 0, symbolList[symIndex].val);
     else
-    	gen(3, level - symbolList[symIndex].level, symbolList[symIndex].addr);
+    	gen(3, level - symbolList[symIndex].level, symbolList[symIndex].val);
 
     getNextToken();
 	}
@@ -710,12 +711,12 @@ void createSymbolList(){
   int c;
   FILE* ofp = fopen(PARSER_OUTPUT_SYMLIST, "w");
   // Header
-  fprintf(ofp, "%-15s\t%-15s\t%-15s\t%-15s\n", "Name", "Type", "Level", "Value");
+  fprintf(ofp, "%-15s\t%-15s\t%-15s\t%-15s\t%-15s\n", "Name", "Type", "Level", "Value", "Addr");
   for(c = 0; c < symbolCounter + 1; c++)
   {
     if (symbolList[c].kind == 0)
       continue;
-    fprintf(ofp, "%-15s\t%-15s\t%-15d\t%-15d\n", symbolList[c].name, kindToType(symbolList[c].kind), symbolList[c].level, symbolList[c].val);
+    fprintf(ofp, "%-15s\t%-15s\t%-15d\t%-15d\t%-15d\n", symbolList[c].name, kindToType(symbolList[c].kind), symbolList[c].level, symbolList[c].val, symbolList[c].addr);
   }
   fclose(ofp);
 }
@@ -734,12 +735,15 @@ int lookUp( const char* name, int level) {
     // Check if...
     // Subprocedure (greater level) or equal to current level (may need to just be greater so sibling procs don't try to redeclare variables)
     // Same name
-    if ( symbolList[i].level == level && (strcmp(symbolList[i].name, name) == 0) )
+    // Also, make sure it is not a procedure
+    if ( symbolList[i].level == level && (strcmp(symbolList[i].name, name) == 0) && ( symbolList[i].addr != -1) )
     {
       (DEBUG) ? printf(ANSI_COLOR_REDP"lookUp(%s, %d, %d)\n"ANSI_COLOR_RESET, t.name, atoi(t.name), level) : printf(" ");
       return i;
     }
   }
+
+  level--;
 
   if ( symbolCounter + 1 < MAX_SYMBOL_TABLE_SIZE )
   {
@@ -748,7 +752,6 @@ int lookUp( const char* name, int level) {
   }
   else
   {
-    printf(ANSI_COLOR_YELLOW"! SYMBOL NOT FOUND !\n"ANSI_COLOR_RESET);
     return -1;
   }
 
