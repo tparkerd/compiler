@@ -146,7 +146,7 @@ void block() {
     //tmp.val = 0;
     printf(ANSI_COLOR_REDP"declare procedure (proc, %s, %d, %d, %d)\n"ANSI_COLOR_RESET, tmp.name, -1, level, asm_line );
     // Using asm_line as the addr may not be the best option
-    insertSymbol(3, tmp.name, -1, level, asm_line);
+    insertSymbol(3, tmp.name, asm_line, level, asm_line);
 
     // Increase the level by one because anything after the proc was declared
     // with be at a higher level, but not including the proc itself
@@ -177,7 +177,7 @@ void block() {
 void statement() {
   (DEBUG) ? printf(ANSI_COLOR_CYAN"statement()\n"ANSI_COLOR_RESET) : printf(" ");
   // If an identifier is found
-  int identIndex, symIndex, tmpIndex, tmpIndex2, tmpBlockIndex;
+  int identIndex, symIndex, tmpIndex, tmpIndex2, tmpBlockIndex, identOffset;
   if ( t.type == identsym )
   {
   	int symIndex = lookUp(t.name, level);
@@ -190,17 +190,22 @@ void statement() {
     else if ( symbolList[symIndex].kind == 1 )
       error(342); // assignment to const/proc not valid
 
-    printf("THIS IS ME! %d <- %d\n", symIndex, symbolList[symIndex].val);
-  	identIndex = symbolList[symIndex].val;
+    printf("symIndex: %d, symbolList[%d]: %d\n", symIndex, symIndex, symbolList[symIndex].val);
+  	identOffset = symbolList[symIndex].addr;
 
     getNextToken();
     if ( t.type != becomessym )
-      error(26); // expected becomes
+    {
+      if ( t. type == eqlsym )
+        error(1); // use := instead of =
+      else
+        error(26); // expected becomes
+    }
 
     getNextToken();
     expression();
 
-    gen(4, symbolList[symIndex].level, identIndex);
+    gen(4, level - symbolList[symIndex].level, identOffset); // may be wrong
   }
   // If a call is found instead
   else if ( t.type == callsym )
@@ -298,7 +303,7 @@ void statement() {
 
     gen(9, 0, 1);
 
-    gen(4, 0, symbolList[symIndex].val);
+    gen(4, 0, symbolList[symIndex].addr);
   }
   // If a write is found instead of identifier or call
   else if ( t.type == writesym )
@@ -729,38 +734,45 @@ void createSymbolList(){
 int lookUp( const char* name, int level) {
   // Gotta do it backwards instead!
   int i;
-  for ( i = symbolCounter; i >= 0; i-- )
+
+  while ( level != -1 )
   {
-    // We've got a match!
-    // Check if...
-    // Subprocedure (greater level) or equal to current level (may need to just be greater so sibling procs don't try to redeclare variables)
-    // Same name
-    // Also, make sure it is not a procedure
-    if ( symbolList[i].level == level && (strcmp(symbolList[i].name, name) == 0) && ( symbolList[i].addr != -1) )
+    for ( i = symbolCounter - 1; i >= 0; i-- )
     {
-      (DEBUG) ? printf(ANSI_COLOR_REDP"lookUp(%s, %d, %d)\n"ANSI_COLOR_RESET, t.name, atoi(t.name), level) : printf(" ");
-      return i;
+      // We've got a match!
+      // Check if...
+      // Subprocedure (greater level) or equal to current level (may need to just be greater so sibling procs don't try to redeclare variables)
+      // Same name
+      // Also, make sure it is not a procedure
+      if ( symbolList[i].level == level && (strcmp(symbolList[i].name, name) == 0) && ( symbolList[i].addr != -1) )
+      {
+        (DEBUG) ? printf(ANSI_COLOR_REDP"lookUp(name, level) = lookUp(%s, %d)\n"ANSI_COLOR_RESET, t.name, level) : printf(" ");
+        (DEBUG) ? printf(ANSI_COLOR_CYAN"[name, level, value, addr]: (%s, %d, %d, %d)\n"ANSI_COLOR_RESET, symbolList[i].name, symbolList[i].level, symbolList[i].val, symbolList[i].addr) : printf(" ");
+        return i;
+      }
     }
+    level--;
   }
+  return -1;
 
-  level--;
-
-  if ( symbolCounter + 1 < MAX_SYMBOL_TABLE_SIZE )
-  {
-    printf(ANSI_COLOR_DARKRED"%d\n"ANSI_COLOR_RESET, symbolCounter);
-    return symbolCounter + 1;
-  }
-  else
-  {
-    return -1;
-  }
+  //
+  //
+  // if ( symbolCounter + 1 < MAX_SYMBOL_TABLE_SIZE )
+  // {
+  //   printf(ANSI_COLOR_DARKRED"%d\n"ANSI_COLOR_RESET, symbolCounter);
+  //   return symbolCounter + 1;
+  // }
+  // else
+  // {
+  //   return -1;
+  // }
 
 }
 
 // If the symbol does not exist yet,
 void insertSymbol(int kind, const char* name, int val, int level, int addr) {
   // Find the location in the symbol list, or find an empty slot for it
-  int location = lookUp(name, level);
+  int location = symbolCounter;
 
   // Make sure that there was an available slot for the new symbol
   // This may need to be used to throw an error where there is a memory overflow
