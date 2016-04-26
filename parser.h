@@ -209,7 +209,7 @@ void statement() {
     getNextToken();
     expression();
 
-    gen(4, level - symbolList[tmpIndex].level, identIndex); 
+    gen(4, level - symbolList[tmpIndex].level, identIndex);
   }
   // If a call is found instead
   else if ( t.type == callsym )
@@ -319,22 +319,23 @@ void statement() {
     getNextToken();
     if ( t.type != identsym )
       error(14); // identifier expected
-    if( t.type == identsym )
-    	symIndex = lookUp(t.name, level);
-    // else// if(t.type == identsym)
-    // {
-    // Look for the symbol in the symbol table to make sure it is declared
-    // STARTED THIS FOR LIT, BUT NOT FINISHED
-    // symbolIndex = lookUp(t.name, level);
-    // if (symbolIndex == -1)
-    //   error()
-    getNextToken();
-    if(symbolList[symIndex].kind == 1)
-    	gen(1, 0, symbolList[symIndex].val);
     else
-    	gen(3, 0, symbolList[symIndex].addr);
+    {
+      symIndex = lookUp(t.name, level);
+      if ( symIndex == -1 )
+      {
+        printf("ERROR IN THE SYMBLOOK UP\n")
+        error(15);
+      }
+      getNextToken();
+      if(symbolList[symIndex].kind == 1)
+        gen(1, 0, symbolList[symIndex].val);
+      else
+        gen(3, 0, symbolList[symIndex].addr);
 
-    	gen(9, 0, 0);
+      gen(9, 0, 0);
+    }
+
   }
 }
 
