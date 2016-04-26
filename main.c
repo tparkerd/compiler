@@ -12,6 +12,6 @@ int main() {
   lexicalanalyzer();
   codegen();
   parser();
-  // pmachine();
+  pmachine();
   return 0;
 }
