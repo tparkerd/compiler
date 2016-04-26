@@ -301,7 +301,7 @@ void statement() {
 
     getNextToken();
 
-    gen(9, 0, 1);
+    gen(10, 0, 2);
 
     gen(4, 0, symbolList[symIndex].addr);
   }
@@ -323,7 +323,7 @@ void statement() {
       else
         gen(3, 0, symbolList[symIndex].val);
 
-      gen(9, 0, 0);
+      gen(9, 0, 1);
     }
 
   }
