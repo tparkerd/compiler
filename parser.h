@@ -191,7 +191,7 @@ void statement() {
     if (symIndex == -1)
       error(11); // undeclared var found
     else if ( symbolList[symIndex].kind == 1 )
-      error(342); // assignment to const/proc not valid
+      error(30); // assignment to const/proc not valid
 
     printf("symIndex: %d, symbolList[%d]: %d\n", symIndex, symIndex, symbolList[symIndex].val);
   	identOffset = symbolList[symIndex].addr;
@@ -248,13 +248,13 @@ void statement() {
   }
   else if ( t.type == ifsym )
   {
-    (DEBUG) ? printf(ANSI_COLOR_CYAN"HERELKRJELKRJELKRLKEJLKJRLKJERLK\n"ANSI_COLOR_RESET) : printf(" ");
     getNextToken();
     condition();
     if ( t.type != thensym )
       error(16); // then expected
 
     getNextToken();
+
     tmpBlockIndex = asm_line;
     gen(8, 0, 0); // Why is this JPC and not a JMP?
 
@@ -262,7 +262,6 @@ void statement() {
     asm_code[tmpBlockIndex].m = asm_line;
 
     getNextToken();
-
 
     if( t.type == elsesym )
     {
@@ -273,7 +272,6 @@ void statement() {
       statement();
       asm_code[tmpBlockIndex].m = asm_line;
     }
-    getNextToken();
   }
 
   else if ( t.type == whilesym )
@@ -326,7 +324,6 @@ void statement() {
 
       gen(9, 0, 1);
     }
-
   }
   (DEBUG) ? printf(ANSI_COLOR_CYAN"exit_statement()\n"ANSI_COLOR_RESET) : printf(" ");
 }
@@ -413,6 +410,9 @@ void factor() {
   if ( t.type == identsym )
   {
     symIndex = lookUp(t.name, level);
+
+    if (symIndex == -1)
+      error(11); // undeclared identifier
 
     if(symbolList[symIndex].kind == 1)
     	gen(1, 0, symbolList[symIndex].val);
@@ -574,6 +574,14 @@ void error(int e) {
     case 29:
       fprintf(lexemeOutput, "%s", "No symbol should follow the final period.");
       printf("No symbol should follow the final period.\n");
+      break;
+    case 30:
+      fprintf(lexemeOutput, "%s", "Assignment to const/proc not valid.");
+      printf("Assignment to const/proc not valid.\n");
+      break;
+    case 35:
+      fprintf(lexemeOutput, "%s", "Expected end.");
+      printf("Expected end.\n");
       break;
     default:
       fprintf(lexemeOutput, "%s", "An error has occurred.\n");
