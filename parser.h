@@ -171,7 +171,7 @@ void block() {
   statement();
   // Only return if it is not the end of the file (so when the t.type != period)
   // a procedure end will end with a semicolon
-  if (t.type == semicolonsym)
+  if (t.type == semicolonsym && t.type != periodsym)
     gen(2, 0, 0); // OPR, 0, 0 (return)
   level--;
 
@@ -265,6 +265,16 @@ void statement() {
     asm_code[tmpBlockIndex].m = asm_line;
 
     getNextToken();
+
+    if ( t.type != elsesym )
+    {
+      tokenCounter--;
+      tokenCounter--;
+      t = lexList[tokenCounter];
+      // tokenCounter++;
+      if ( t.id != 0 )
+        (DEBUG) ? printf(ANSI_COLOR_PURPLE"[%d] %s (%s)\n"ANSI_COLOR_RESET, t.id, translate(t.id), t.name) : printf(" ");
+    }
 
     if( t.type == elsesym )
     {
