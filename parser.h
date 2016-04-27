@@ -18,7 +18,7 @@ int lookUp(const char* name, int level);
 int gen(int instruction, int l, int m);
 const char* opTrans(int type);
 void insertSymbol(int kind, const char* name, int val, int level, int addr);
-
+void displayCodeGen();
 
 
 void parser() {
@@ -50,6 +50,7 @@ void program() {
   // Why does this get inserted into the symbol table?
   gen(11, 0, 3);
   (DEBUG) ? printf(ANSI_COLOR_CYAN"exit_program()\n"ANSI_COLOR_RESET) : printf(" ");
+  displayCodeGen();
 }
 
 void block() {
@@ -213,7 +214,7 @@ void statement() {
   // If a call is found instead
   else if ( t.type == callsym )
   {
-    struct token tmpToken = t;
+    // struct token tmpToken = t;
     getNextToken();
     if ( t.type != identsym )
       error(14); // identifier expected
@@ -222,13 +223,15 @@ void statement() {
     // For some reason it is looking for this symbo to see if it is declared
     // oh, gotta check that the procedure was actually declared
     symIndex = lookUp(t.name, level);
+
     if (symIndex == -1)
       error(11); // make need new error to state that the procedure is undeclared
 
-    // Valid call was made, generate the code for it (what is the address though?)
-    gen(5, level - symbolList[symIndex].level, symbolList[symIndex].addr ); // we need this after the procedure is parsered
-
     getNextToken();
+
+    // Valid call was made, generate the code for it (what is the address though?)
+    gen(5, level - symbolList[symIndex].level, symbolList[symIndex].addr ); // we need this after the procedure is parsered ( this may actually be just level, not the subtraction)
+
   }
   // If a begin is found instead of identifier or call
   else if ( t.type == beginsym )
@@ -829,3 +832,17 @@ const char* opTrans(int type) {
       return "???";
   }
 }
+
+
+void displayCodeGen() {
+   int i;
+   FILE* ofp = fopen(PARSER_OUTPUT_ASMCODE, "w");
+   printf("Number of asm_lines: %d\n", asm_line);
+   for (i = 0; i < asm_line; i++)
+   {
+     printf("%*d %s %*d %*d\n", 2, asm_code[i].addr, opTrans(asm_code[i].instruction), 3, asm_code[i].l, 3, asm_code[i].m);
+     // Why does the gen function seem to insert anything into the asm_code, but should be the symbol table?
+     fprintf(ofp, "%d %d %d\n", asm_code[i].instruction, asm_code[i].l, asm_code[i].m);
+   }
+   fclose(ofp);
+ }
