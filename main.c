@@ -10,8 +10,8 @@
 
 int main() {
   lexicalanalyzer();
-  codegen();
   parser();
+  codegen();
   pmachine();
   return 0;
 }
