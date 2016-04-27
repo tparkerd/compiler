@@ -15,10 +15,10 @@ const char* translate(int n);
 const char* kindToType(int n);
 void createSymbolList();
 int lookUp(const char* name, int level);
-int gen(int instruction, int l, int m);
-const char* opTrans(int type);
+// int gen(int instruction, int l, int m);
+// const char* opTrans(int type);
 void insertSymbol(int kind, const char* name, int val, int level, int addr);
-void displayCodeGen();
+// void displayCodeGen();
 
 
 void parser() {
@@ -49,7 +49,7 @@ void program() {
 
   // Why does this get inserted into the symbol table?
   gen(11, 0, 3);
-  (DEBUG) ? printf(ANSI_COLOR_CYAN"exit_program()\n"ANSI_COLOR_RESET) : printf(" ");
+  // fclose(codeGenOutput);
   displayCodeGen();
 }
 
@@ -447,13 +447,14 @@ void factor() {
 }
 
 void getNextToken() {
-  if ( tokenCounter >= tokenCount )
+  if ( tokenCounter > tokenCount )
   {
     exit(0);
   }
   t = lexList[tokenCounter];
   tokenCounter++;
-  (DEBUG) ? printf(ANSI_COLOR_GREEN"[%d] %s (%s)\n"ANSI_COLOR_RESET, t.id, translate(t.id), t.name) : printf(" ");
+  if ( t.id != 0 )
+    (DEBUG) ? printf(ANSI_COLOR_GREEN"[%d] %s (%s)\n"ANSI_COLOR_RESET, t.id, translate(t.id), t.name) : printf(" ");
 }
 
 void error(int e) {
@@ -796,7 +797,7 @@ void insertSymbol(int kind, const char* name, int val, int level, int addr) {
   symbolList[location].addr = addr;
 }
 
-int gen(int instruction, int l, int m) {
+/*int gen(int instruction, int l, int m) {
   ((DEBUG) ? printf(ANSI_COLOR_YELLOW"gen(%s, %d, %d)\n"ANSI_COLOR_RESET, opTrans(instruction), l, m) : printf(" "));
   asm_code[asm_line].addr = asm_line;
   asm_code[asm_line].instruction = instruction;
@@ -845,4 +846,4 @@ void displayCodeGen() {
      fprintf(ofp, "%d %d %d\n", asm_code[i].instruction, asm_code[i].l, asm_code[i].m);
    }
    fclose(ofp);
- }
+ }*/
