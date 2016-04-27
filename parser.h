@@ -259,9 +259,6 @@ void statement() {
     statement();
     asm_code[tmpBlockIndex].m = asm_line;
 
-    if(t.type != semicolonsym){
-      error(5);
-    }
     getNextToken();
 
 
@@ -439,7 +436,7 @@ void factor() {
 }
 
 void getNextToken() {
-  if ( tokenCounter > tokenCount )
+  if ( tokenCounter >= tokenCount )
   {
     exit(0);
   }
