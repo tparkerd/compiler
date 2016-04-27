@@ -49,8 +49,7 @@ void program() {
 
   // Why does this get inserted into the symbol table?
   gen(11, 0, 3);
-  // fclose(codeGenOutput);
-  displayCodeGen();
+  (DEBUG) ? printf(ANSI_COLOR_CYAN"exit_program()\n"ANSI_COLOR_RESET) : printf(" ");
 }
 
 void block() {
@@ -146,7 +145,7 @@ void block() {
 
     // Set a dummy value for the offset, so we can figure it out later
     //tmp.val = 0;
-    printf(ANSI_COLOR_REDP"declare procedure (proc, %s, %d, %d, %d)\n"ANSI_COLOR_RESET, tmp.name, -1, level, asm_line );
+    printf(ANSI_COLOR_REDP"declare procedure (proc, %s, %d, %d, %d)\n"ANSI_COLOR_RESET, tmp.name, asm_line, level, asm_line );
     // Using asm_line as the addr may not be the best option
     insertSymbol(3, tmp.name, asm_line, level, asm_line);
 
@@ -174,6 +173,8 @@ void block() {
   if (t.type == semicolonsym)
     gen(2, 0, 0); // OPR, 0, 0 (return)
   level--;
+
+  (DEBUG) ? printf(ANSI_COLOR_CYAN"exit_block()\n"ANSI_COLOR_RESET) : printf(" ");
 }
 
 void statement() {
@@ -247,6 +248,7 @@ void statement() {
   }
   else if ( t.type == ifsym )
   {
+    (DEBUG) ? printf(ANSI_COLOR_CYAN"HERELKRJELKRJELKRLKEJLKJRLKJERLK\n"ANSI_COLOR_RESET) : printf(" ");
     getNextToken();
     condition();
     if ( t.type != thensym )
@@ -326,6 +328,7 @@ void statement() {
     }
 
   }
+  (DEBUG) ? printf(ANSI_COLOR_CYAN"exit_statement()\n"ANSI_COLOR_RESET) : printf(" ");
 }
 
 void condition() {
@@ -340,13 +343,14 @@ void condition() {
   {
     expression();
     someOp = t.type;
-    if ( !(t.type == neqsym || t.type == lessym || t.type == leqsym || t.type == gtrsym || t.type == geqsym) )
+    if ( !(t.type == neqsym || t.type == lessym || t.type == leqsym || t.type == gtrsym || t.type == geqsym || t.type == eqlsym) )
       error(20); // relational operator expected
 
     getNextToken();
     expression();
     gen(2, 0, someOp);
   }
+  (DEBUG) ? printf(ANSI_COLOR_CYAN"exit_condition()\n"ANSI_COLOR_RESET) : printf(" ");
 }
 
 void expression() {
@@ -379,6 +383,7 @@ void expression() {
       gen(2, 0, 3);
 
   }
+  (DEBUG) ? printf(ANSI_COLOR_CYAN"exit_expression()\n"ANSI_COLOR_RESET) : printf(" ");
 }
 
 void term() {
@@ -397,6 +402,7 @@ void term() {
     else
     	gen(2, 0, 5);//edit this to correct one
   }
+  (DEBUG) ? printf(ANSI_COLOR_CYAN"exit_term()\n"ANSI_COLOR_RESET) : printf(" ");
 }
 
 void factor() {
@@ -433,6 +439,8 @@ void factor() {
   }
   else
     error(27); // expected id, num, or opening parenthesis
+
+  (DEBUG) ? printf(ANSI_COLOR_CYAN"exit_factor()\n"ANSI_COLOR_RESET) : printf(" ");
 }
 
 void getNextToken() {
@@ -753,19 +761,6 @@ int lookUp( const char* name, int level) {
     level--;
   }
   return -1;
-
-  //
-  //
-  // if ( symbolCounter + 1 < MAX_SYMBOL_TABLE_SIZE )
-  // {
-  //   printf(ANSI_COLOR_DARKRED"%d\n"ANSI_COLOR_RESET, symbolCounter);
-  //   return symbolCounter + 1;
-  // }
-  // else
-  // {
-  //   return -1;
-  // }
-
 }
 
 // If the symbol does not exist yet,
@@ -798,18 +793,6 @@ int gen(int instruction, int l, int m) {
   asm_code[asm_line].m = m;
   asm_line++;
   return asm_line;
-}
-
-void displayCodeGen() {
-  int i;
-  FILE* ofp = fopen(PARSER_OUTPUT_ASMCODE, "w");
-  printf("Number of asm_lines: %d\n", asm_line);
-  for (i = 0; i < asm_line; i++)
-  {
-    printf("%*d %s %*d %*d\n", 2, asm_code[i].addr, opTrans(asm_code[i].instruction), 3, asm_code[i].l, 3, asm_code[i].m);
-    fprintf(ofp, "%d %d %d\n", asm_code[i].instruction, asm_code[i].l, asm_code[i].m);
-  }
-  fclose(ofp);
 }
 
 const char* opTrans(int type) {
