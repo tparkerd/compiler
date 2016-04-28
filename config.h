@@ -19,7 +19,7 @@
     #define MAX_SYMBOL_TABLE_SIZE 100
   // VM
     #define MAX_CODE_LENGTH 500
-    #define MAX_LEXI_LEVELS 3
+    #define MAX_LEXI_LEVELS 4
     #define MAX_STACK_HEIGHT 2000
     const char* INSTRUCTSTRINGS[] = {"", "LIT", "OPR", "LOD", "STO", "CAL", "INC", "JMP", "JPC", "SIO", "SIO", "SIO"};  //Char arrays to hold instructions and op codes
     const char* OPSTRINGS[] = {"RET", "NEG", "ADD", "SUB", "MUL", "DIV", "ODD", "MOD", "EQL", "NEQ", "LSS", "LEQ", "GTR", "GEQ"};
