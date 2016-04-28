@@ -364,7 +364,26 @@ void condition() {
 
     getNextToken();
     expression();
-    gen(2, 0, someOp);
+    switch(someOp){
+      case eqlsym:
+        gen(2, 0, 8);
+        break;
+      case neqsym:
+        gen(2, 0, 9);
+        break;
+      case lessym:
+        gen(2, 0, 10);
+        break;
+      case leqsym:
+        gen(2, 0, 11);
+        break;
+      case gtrsym:
+        gen(2, 0, 12);
+        break;
+      case geqsym:
+        gen(2, 0, 13);
+        break;
+    }
   }
   (DEBUG) ? printf(ANSI_COLOR_CYAN"exit_condition()\n"ANSI_COLOR_RESET) : printf(" ");
 }
