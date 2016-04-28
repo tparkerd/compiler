@@ -5,7 +5,7 @@
 
 // Stringify
 const char* instructionToString(int type);
-const char* oprToString(int n);
+const char* operationToString(int n);
 const char* translate(int n);
 const char* kindToString(int n);
 
@@ -41,7 +41,7 @@ const char* instructionToString(int type) {
       return "???";
   }
 }
-const char* oprToString(int type) {
+const char* operationToString(int type) {
   switch(type) {
     case 0:
       return "RET";
