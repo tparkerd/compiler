@@ -73,6 +73,7 @@ void executeCycle(int operation){
             scanf("%d", &stack[stackPointer]);
             break;
         case 11://SIO - Halt machine
+                fprintf(fileTrace, "%s", "\nSuccessfully halted.\n");
                 fclose(fileTrace);
                 printOut(operation);
             break;
