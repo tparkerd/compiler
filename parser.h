@@ -181,7 +181,7 @@ void block() {
 void statement() {
   (DEBUG) ? printf(ANSI_COLOR_CYAN"statement()\n"ANSI_COLOR_RESET) : printf(" ");
   // If an identifier is found
-  int identIndex, symIndex, tmpIndex, tmpIndex2, tmpBlockIndex, identOffset;
+  int identIndex, symIndex, tmpIndex, tmpIndex2, tmpBlockIndex, tmpBlockIndex2, identOffset;
   if ( t.type == identsym )
   {
   	int symIndex = lookUp(t.name, level);
@@ -259,32 +259,37 @@ void statement() {
     getNextToken();
 
     tmpBlockIndex = asm_line;
+    //asm_code[tmpBlockIndex].m = asm_line;
     gen(8, 0, 0); // Why is this JPC and not a JMP?
-
     statement();
+    tmpBlockIndex2 = asm_line;
+    gen(7, 0, 0);
     asm_code[tmpBlockIndex].m = asm_line;
+    //asm_code[tmpBlockIndex2].m = asm_line;
 
     getNextToken();
 
     if ( t.type != elsesym )
-    {
-      tokenCounter--;
-      tokenCounter--;
-      t = lexList[tokenCounter];
-      // tokenCounter++;
-      if ( t.id != 0 )
-        (DEBUG) ? printf(ANSI_COLOR_PURPLE"[%d] %s (%s)\n"ANSI_COLOR_RESET, t.id, translate(t.id), t.name) : printf(" ");
-    }
+     {
+       tokenCounter--;
+       tokenCounter--;
+       t = lexList[tokenCounter];
+        tokenCounter++;
+       if ( t.id != 0 )
+         (DEBUG) ? printf(ANSI_COLOR_PURPLE"[%d] %s (%s)\n"ANSI_COLOR_RESET, t.id, translate(t.id), t.name) : printf(" ");
+     }
 
     if( t.type == elsesym )
     {
-    	asm_code[tmpBlockIndex].m = asm_line + 1;
-    	tmpBlockIndex = asm_line;
-    	gen(7, 0, 0);
+    	//asm_code[tmpBlockIndex].m = asm_line;
+    	//tmpBlockIndex = asm_line;
+    	//gen(7, 0, 0);
       getNextToken();
       statement();
-      asm_code[tmpBlockIndex].m = asm_line;
     }
+    asm_code[tmpBlockIndex2].m = asm_line;
+
+      //getNextToken();
   }
 
   else if ( t.type == whilesym )
@@ -294,6 +299,7 @@ void statement() {
     condition();
     tmpIndex2 = asm_line;
     gen(8, 0, 0);
+
     if ( t.type != dosym )
       error(18); // do expected
 
@@ -395,6 +401,15 @@ void expression() {
   }
   (DEBUG) ? printf(ANSI_COLOR_CYAN"exit_expression()\n"ANSI_COLOR_RESET) : printf(" ");
 }
+
+    // case 4:
+    //   return "plussym";
+    // case 5:
+    //   return "minussym";
+    // case 6:
+    //   return "mulsym";
+    // case 7:
+    //   return "slashsym";
 
 void term() {
   (DEBUG) ? printf(ANSI_COLOR_CYAN"term()\n"ANSI_COLOR_RESET) : printf(" ");
