@@ -7,4 +7,4 @@
 - \*Return Values
 - \*Function Parameters
 
-\*Not yet start, still reading the specs
+\*Not yet started, still reading the specs.
