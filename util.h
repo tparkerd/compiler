@@ -6,7 +6,7 @@
 // Stringify
 const char* instructionToString(int type);
 const char* operationToString(int n);
-const char* translate(int n);
+const char* symbolToString(int n);
 const char* kindToString(int n);
 
 // _________________________________________
