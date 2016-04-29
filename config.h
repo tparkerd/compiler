@@ -97,6 +97,10 @@
       int l;
       int m;
     } asmCode;
+    typedef enum {
+      LIT = 1, OPR = 2, LOD = 3, STO = 4, CAL = 5, INC = 6, JMP = 7, JPC = 8,
+      WRITE = 9, READ = 10, HALT = 11 // SIO 0 1, SIO 0 2, and SIO 0 3
+    } mcodeOperation;
   // VM
     typedef struct instr {
         int OP;

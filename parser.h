@@ -45,7 +45,7 @@ void program() {
   fclose(parserLog);
 
   if (DEBUG) printf(ANSI_COLOR_CYAN"exit_program()\n"ANSI_COLOR_RESET);
-  gen(11, 0, 3);
+  gen(HALT, 0, 3);
   // fclose(codeGenOutput);
   displayCodeGen();
 }
@@ -56,7 +56,7 @@ void block() {
   struct symbol tmp;
   int space = 4;
   int tmpBPos = asm_line;
-  gen(7, 0, 0);
+  gen(JMP, 0, 0);
   int tmpIndex;
   tmpM = 0;
   // Case: constant declaration
@@ -155,12 +155,12 @@ void block() {
 
   // Here is where the address for JMP is changed to the correct address
   asm_code[tmpBPos].m = asm_line;
-  gen(6, 0, space); // INC, 0, space (reserve space)
+  gen(INC, 0, space); // INC, 0, space (reserve space)
   statement();
   // Only return if it is not the end of the file (so when the t.type != period)
   // a procedure end will end with a semicolon
   if (t.type == semicolonsym && t.type != periodsym)
-    gen(2, 0, 0); // OPR, 0, 0 (return)
+    gen(OPR, 0, 0); // OPR, 0, 0 (return)
 
 
   // ###############################################################
@@ -213,7 +213,7 @@ void statement() {
     expression();
 
     // Store the value at the offset of the starting identifier
-    gen(4, level - symbolList[symIndex].level, identOffset);
+    gen(STO, level - symbolList[symIndex].level, identOffset);
   }
   // If a call is found instead
   else if ( t.type == callsym )
@@ -230,7 +230,7 @@ void statement() {
     getNextToken();
 
     // Valid call was made, generate the code for it (what is the address though?)
-    gen(5, level - symbolList[symIndex].level, symbolList[symIndex].addr );
+    gen(CAL, level - symbolList[symIndex].level, symbolList[symIndex].addr );
 
   }
   // If a begin is found instead of identifier or call
@@ -258,10 +258,10 @@ void statement() {
     getNextToken();
 
     tmpBlockIndex = asm_line;
-    gen(8, 0, 0); // JPC, 0, ?
+    gen(JPC, 0, 0); // JPC, 0, ?
     statement();
     tmpBlockIndex2 = asm_line;
-    gen(7, 0, 0); // JMP, 0, ?
+    gen(JMP, 0, 0); // JMP, 0, ?
     asm_code[tmpBlockIndex].m = asm_line;
 
     getNextToken();
@@ -287,14 +287,14 @@ void statement() {
     getNextToken();
     condition();
     tmpIndex2 = asm_line;
-    gen(8, 0, 0);
+    gen(JPC, 0, 0);
 
     if ( t.type != dosym )
       error(18); // do expected
 
     getNextToken();
     statement();
-    gen(7, 0, tmpIndex);
+    gen(JMP, 0, tmpIndex);
     asm_code[tmpIndex2].m = asm_line;
   }
   // If a read is found instead of identifier or call
@@ -308,9 +308,9 @@ void statement() {
 
     getNextToken();
 
-    gen(10, 0, 2);
+    gen(READ, 0, 2);
 
-    gen(4, 0, symbolList[symIndex].addr);
+    gen(STO, 0, symbolList[symIndex].addr);
   }
   // If a write is found instead of identifier or call
   else if ( t.type == writesym )
@@ -326,13 +326,13 @@ void statement() {
 
       // If it's a const, the actual value will be in its val field
       if(symbolList[symIndex].kind == 1)
-        gen(1, 0, symbolList[symIndex].val);
+        gen(LIT, 0, symbolList[symIndex].val);
       // Otherwise it must be a var, so the value will need to be loaded
       // based on its offset value (also in its val field)
       else
-        gen(3, 0, symbolList[symIndex].val);
+        gen(LOD, 0, symbolList[symIndex].val);
 
-      gen(9, 0, 1);
+      gen(WRITE, 0, 1);
 
       getNextToken();
     }
@@ -345,7 +345,7 @@ void condition() {
   if (DEBUG) printf(ANSI_COLOR_CYAN"condition()\n"ANSI_COLOR_RESET);
   if ( t.type == oddsym )
   {
-  	gen(2, 0, 6);
+  	gen(OPR, 0, 6);
     getNextToken();
     expression();
   } else
@@ -359,22 +359,22 @@ void condition() {
     expression();
     switch(someOp){
       case eqlsym:
-        gen(2, 0, 8);
+        gen(OPR, 0, 8);
         break;
       case neqsym:
-        gen(2, 0, 9);
+        gen(OPR, 0, 9);
         break;
       case lessym:
-        gen(2, 0, 10);
+        gen(OPR, 0, 10);
         break;
       case leqsym:
-        gen(2, 0, 11);
+        gen(OPR, 0, 11);
         break;
       case gtrsym:
-        gen(2, 0, 12);
+        gen(OPR, 0, 12);
         break;
       case geqsym:
-        gen(2, 0, 13);
+        gen(OPR, 0, 13);
         break;
     }
   }
@@ -393,7 +393,7 @@ void expression() {
     {
       getNextToken();
       term();
-      gen(2, 0, 1);
+      gen(OPR, 0, 1);
     }
 
   }
@@ -406,9 +406,9 @@ void expression() {
     term();
 
     if ( tmpOp == plussym )
-      gen(2, 0, 2);
+      gen(OPR, 0, 2);
     else
-      gen(2, 0, 3);
+      gen(OPR, 0, 3);
 
   }
   if (DEBUG) printf(ANSI_COLOR_CYAN"exit_expression()\n"ANSI_COLOR_RESET);
@@ -426,9 +426,9 @@ void term() {
     getNextToken();
     factor();
     if(tmpOp == multsym)
-    	gen(2, 0, 4);//edit this to correct one
+    	gen(OPR, 0, 4);//edit this to correct one
     else
-    	gen(2, 0, 5);//edit this to correct one
+    	gen(OPR, 0, 5);//edit this to correct one
   }
   if (DEBUG) printf(ANSI_COLOR_CYAN"exit_term()\n"ANSI_COLOR_RESET);
 }
@@ -446,16 +446,16 @@ void factor() {
       error(11); // undeclared identifier
 
     if(symbolList[symIndex].kind == 1)
-    	gen(1, 0, symbolList[symIndex].val);
+    	gen(LIT, 0, symbolList[symIndex].val);
     else
-    	gen(3, level - symbolList[symIndex].level, symbolList[symIndex].val);
+    	gen(LOD, level - symbolList[symIndex].level, symbolList[symIndex].val);
 
     getNextToken();
 	}
 
   else if ( t.type == numbersym )
   {
-  	gen(1, 0, atoi(t.name));
+  	gen(LIT, 0, atoi(t.name));
     getNextToken();
   }
 
@@ -473,9 +473,9 @@ void factor() {
     else
     {
       // Will need to be changed for the parameter list implementation
-      gen(5, level - symbolList[symIndex].level, symbolList[symIndex].addr );
+      gen(CAL, level - symbolList[symIndex].level, symbolList[symIndex].addr );
       // recover the return value from the FV (offset zero) of the previous's activation record
-      gen(6, 0, 1);
+      gen(INC, 0, 1);
     }
 
     getNextToken();
@@ -738,7 +738,7 @@ int lookUp( const char* name, int level) {
 
 // If the symbol does not exist yet,
 void insertSymbol(int kind, const char* name, int val, int level, int addr) {
-  if (DEBUG) printf(ANSI_COLOR_PURPLE"insertSymbol(%s, %s, %d, %d, %d)\n"ANSI_COLOR_RESET, kindToString(kind), name, level, val, addr);
+  if (DEBUG) printf(ANSI_COLOR_PURPLE"insertSymbol(%s, %s, %d, %d)\n"ANSI_COLOR_RESET, kindToString(kind), name, level, val);
 
   // Find the location in the symbol list, or find an empty slot for it
   int location = symbolCounter;
