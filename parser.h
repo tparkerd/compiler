@@ -11,14 +11,11 @@ void error(int e);
 void readTokenList();
 void displayTokenList();
 void countValidTokens();
-const char* translate(int n);
-const char* kindToType(int n);
 void createSymbolList();
 int lookUp(const char* name, int level);
-// int gen(int instruction, int l, int m);
-// const char* opTrans(int type);
+int gen(int instruction, int l, int m);
 void insertSymbol(int kind, const char* name, int val, int level, int addr);
-// void displayCodeGen();
+void displayCodeGen();
 
 
 void parser() {
@@ -26,13 +23,13 @@ void parser() {
   memset(symbolList, 0, sizeof(symbol) * MAX_SYMBOL_TABLE_SIZE);
   readTokenList();
   countValidTokens();
-  displayTokenList();
+  if (DEBUG) displayTokenList();
   program();
   createSymbolList();
 }
 
 void program() {
-  (DEBUG) ? printf(ANSI_COLOR_CYAN"program()\n"ANSI_COLOR_RESET) : printf(" ");
+  if (DEBUG) printf(ANSI_COLOR_CYAN"program()\n"ANSI_COLOR_RESET);
   getNextToken();
   block();
   if (t.type != periodsym)
@@ -47,7 +44,7 @@ void program() {
   fprintf(parserLog, "\nInput program is syntactically correct.\n");
   fclose(parserLog);
 
-  // Why does this get inserted into the symbol table?
+  if (DEBUG) printf(ANSI_COLOR_CYAN"exit_program()\n"ANSI_COLOR_RESET);
   gen(11, 0, 3);
   // fclose(codeGenOutput);
   displayCodeGen();
@@ -55,7 +52,7 @@ void program() {
 
 void block() {
   level++;
-  (DEBUG) ? printf(ANSI_COLOR_CYAN"block()\n"ANSI_COLOR_RESET) : printf(" ");
+  if (DEBUG) printf(ANSI_COLOR_CYAN"block()\n"ANSI_COLOR_RESET);
   struct symbol tmp;
   int space = 4;
   int tmpBPos = asm_line;
@@ -84,7 +81,7 @@ void block() {
 
       // Valid number found, so assign its value
       tmp.val = atoi(t.name);
-      printf(ANSI_COLOR_PURPLE"Declare(const, %s, %d, %d, %d)\n"ANSI_COLOR_RESET, tmp.name, tmp.val, 0, 0);
+      if (DEBUG) printf(ANSI_COLOR_PURPLE"Declare(const, %s, %d, %d, %d)\n"ANSI_COLOR_RESET, tmp.name, tmp.val, 0, 0);
       insertSymbol(1, tmp.name, tmp.val, 0, 0);
 
     } while ( t.type == commasym );
@@ -111,12 +108,9 @@ void block() {
 
       // Valid id found, so assign its Name
       strcpy(tmp.name, t.name);
-      printf(ANSI_COLOR_PURPLE"declare identifier (var, %s, %d, %d, %d)\n"ANSI_COLOR_RESET, tmp.name, space, level, space);
+      if (DEBUG) printf(ANSI_COLOR_PURPLE"declare identifier (var, %s, %d, %d, %d)\n"ANSI_COLOR_RESET, tmp.name, space, level, space);
       insertSymbol(2, tmp.name, space, level, space);
       space++;
-      // (int kind, const char* name, int val, int level, int addr)
-      // (int kind, Token t, int L, int M, int val)
-      // pushSymTable(2, currentToken, lexLevel, currentM+4, 0);
 
       getNextToken();
     } while ( t.type == commasym );
@@ -146,7 +140,7 @@ void block() {
 
     // Set a dummy value for the offset, so we can figure it out later
     //tmp.val = 0;
-    printf(ANSI_COLOR_REDP"declare procedure (proc, %s, %d, %d, %d)\n"ANSI_COLOR_RESET, tmp.name, asm_line, level, asm_line );
+    if (DEBUG) printf(ANSI_COLOR_REDP"declare procedure (proc, %s, %d, %d, %d)\n"ANSI_COLOR_RESET, tmp.name, asm_line, level, asm_line ) ;
     // Using asm_line as the addr may not be the best option
     insertSymbol(3, tmp.name, asm_line, level, asm_line);
 
@@ -157,8 +151,6 @@ void block() {
 
     if ( t.type != semicolonsym )
       error(5); // expected semicolon
-    // else
-     	//gen(9, 0, 2);
 
     getNextToken();
   } // end procedure declaration
@@ -173,28 +165,43 @@ void block() {
   // a procedure end will end with a semicolon
   if (t.type == semicolonsym && t.type != periodsym)
     gen(2, 0, 0); // OPR, 0, 0 (return)
+
+
+  // ###############################################################
+  // ###############################################################
+  // #######                                                 #######
+  // #######           I think this is where we              #######
+  // #######           should place any code to              #######
+  // #######           delete a symbol (local variable)      #######
+  // #######           from the symbol list.                 #######
+  // #######                                                 #######
+  // #######                                                 #######
+  // #######                                                 #######
+  // ###############################################################
+  // ###############################################################
+
   level--;
 
-  (DEBUG) ? printf(ANSI_COLOR_CYAN"exit_block()\n"ANSI_COLOR_RESET) : printf(" ");
+  if (DEBUG) printf(ANSI_COLOR_CYAN"exit_block()\n"ANSI_COLOR_RESET);
 }
 
 void statement() {
-  (DEBUG) ? printf(ANSI_COLOR_CYAN"statement()\n"ANSI_COLOR_RESET) : printf(" ");
+  if (DEBUG) printf(ANSI_COLOR_CYAN"statement()\n"ANSI_COLOR_RESET);
   // If an identifier is found
   int identIndex, symIndex, tmpIndex, tmpIndex2, tmpBlockIndex, tmpBlockIndex2, identOffset;
   if ( t.type == identsym )
   {
   	int symIndex = lookUp(t.name, level);
     // Check if the idenfier has already been declared
-    // Assume it has not been declared
-
     // If the variable was not declared, throw and error
     if (symIndex == -1)
       error(11); // undeclared var found
-    else if ( symbolList[symIndex].kind == 1 )
+
+    // Also check if it is not a var
+    else if ( symbolList[symIndex].kind != 2 )
       error(30); // assignment to const/proc not valid
 
-    printf("symIndex: %d, symbolList[%d]: %d\n", symIndex, symIndex, symbolList[symIndex].val);
+    if (DEBUG) printf("symIndex: %d, symbolList[%d]: %d\n", symIndex, symIndex, symbolList[symIndex].val);
   	identOffset = symbolList[symIndex].addr;
 
     getNextToken();
@@ -209,7 +216,7 @@ void statement() {
     getNextToken();
     expression();
 
-    gen(4, level - symbolList[symIndex].level, identOffset); // may be wrong
+    gen(4, level - symbolList[symIndex].level, identOffset);
   }
   // If a call is found instead
   else if ( t.type == callsym )
@@ -230,7 +237,7 @@ void statement() {
     getNextToken();
 
     // Valid call was made, generate the code for it (what is the address though?)
-    gen(5, level - symbolList[symIndex].level, symbolList[symIndex].addr ); // we need this after the procedure is parsered ( this may actually be just level, not the subtraction)
+    gen(5, level - symbolList[symIndex].level, symbolList[symIndex].addr );
 
   }
   // If a begin is found instead of identifier or call
@@ -259,37 +266,27 @@ void statement() {
     getNextToken();
 
     tmpBlockIndex = asm_line;
-    //asm_code[tmpBlockIndex].m = asm_line;
-    gen(8, 0, 0); // Why is this JPC and not a JMP?
+    gen(8, 0, 0); // JPC, 0, ?
     statement();
     tmpBlockIndex2 = asm_line;
-    gen(7, 0, 0);
+    gen(7, 0, 0); // JMP, 0, ?
     asm_code[tmpBlockIndex].m = asm_line;
-    //asm_code[tmpBlockIndex2].m = asm_line;
 
     getNextToken();
 
     if ( t.type != elsesym )
-     {
-       tokenCounter--;
-       tokenCounter--;
-       t = lexList[tokenCounter];
-        tokenCounter++;
-       if ( t.id != 0 )
-         (DEBUG) ? printf(ANSI_COLOR_PURPLE"[%d] %s (%s)\n"ANSI_COLOR_RESET, t.id, translate(t.id), t.name) : printf(" ");
-     }
-
+    {
+      tokenCounter--;
+      tokenCounter--;
+      t = lexList[tokenCounter];
+      tokenCounter++;
+    }
     if( t.type == elsesym )
     {
-    	//asm_code[tmpBlockIndex].m = asm_line;
-    	//tmpBlockIndex = asm_line;
-    	//gen(7, 0, 0);
       getNextToken();
       statement();
     }
     asm_code[tmpBlockIndex2].m = asm_line;
-
-      //getNextToken();
   }
 
   else if ( t.type == whilesym )
@@ -344,12 +341,12 @@ void statement() {
       gen(9, 0, 1);
     }
   }
-  (DEBUG) ? printf(ANSI_COLOR_CYAN"exit_statement()\n"ANSI_COLOR_RESET) : printf(" ");
+  if (DEBUG) printf(ANSI_COLOR_CYAN"exit_statement()\n"ANSI_COLOR_RESET);
 }
 
 void condition() {
 	int someOp;
-  (DEBUG) ? printf(ANSI_COLOR_CYAN"condition()\n"ANSI_COLOR_RESET) : printf(" ");
+  if (DEBUG) printf(ANSI_COLOR_CYAN"condition()\n"ANSI_COLOR_RESET);
   if ( t.type == oddsym )
   {
   	gen(2, 0, 6);
@@ -385,11 +382,11 @@ void condition() {
         break;
     }
   }
-  (DEBUG) ? printf(ANSI_COLOR_CYAN"exit_condition()\n"ANSI_COLOR_RESET) : printf(" ");
+  if (DEBUG) printf(ANSI_COLOR_CYAN"exit_condition()\n"ANSI_COLOR_RESET);
 }
 
 void expression() {
-  (DEBUG) ? printf(ANSI_COLOR_CYAN"expression()\n"ANSI_COLOR_RESET) : printf(" ");
+  if (DEBUG) printf(ANSI_COLOR_CYAN"expression()\n"ANSI_COLOR_RESET);
   // Trying to do an op code gen
   tokenType tmpOp;
 
@@ -418,7 +415,7 @@ void expression() {
       gen(2, 0, 3);
 
   }
-  (DEBUG) ? printf(ANSI_COLOR_CYAN"exit_expression()\n"ANSI_COLOR_RESET) : printf(" ");
+  if (DEBUG) printf(ANSI_COLOR_CYAN"exit_expression()\n"ANSI_COLOR_RESET);
 }
 
     // case 4:
@@ -431,7 +428,7 @@ void expression() {
     //   return "slashsym";
 
 void term() {
-  (DEBUG) ? printf(ANSI_COLOR_CYAN"term()\n"ANSI_COLOR_RESET) : printf(" ");
+  if (DEBUG) printf(ANSI_COLOR_CYAN"term()\n"ANSI_COLOR_RESET);
 
   tokenType tmpOp;
 
@@ -446,11 +443,11 @@ void term() {
     else
     	gen(2, 0, 5);//edit this to correct one
   }
-  (DEBUG) ? printf(ANSI_COLOR_CYAN"exit_term()\n"ANSI_COLOR_RESET) : printf(" ");
+  if (DEBUG) printf(ANSI_COLOR_CYAN"exit_term()\n"ANSI_COLOR_RESET);
 }
 
 void factor() {
-  (DEBUG) ? printf(ANSI_COLOR_CYAN"factor()\n"ANSI_COLOR_RESET) : printf(" ");
+  if (DEBUG) printf(ANSI_COLOR_CYAN"factor()\n"ANSI_COLOR_RESET);
 
   int symIndex;
 
@@ -487,7 +484,7 @@ void factor() {
   else
     error(27); // expected id, num, or opening parenthesis
 
-  (DEBUG) ? printf(ANSI_COLOR_CYAN"exit_factor()\n"ANSI_COLOR_RESET) : printf(" ");
+  if (DEBUG) printf(ANSI_COLOR_CYAN"exit_factor()\n"ANSI_COLOR_RESET);
 }
 
 void getNextToken() {
@@ -498,7 +495,7 @@ void getNextToken() {
   t = lexList[tokenCounter];
   tokenCounter++;
   if ( t.id != 0 )
-    (DEBUG) ? printf(ANSI_COLOR_GREEN"[%d] %s (%s)\n"ANSI_COLOR_RESET, t.id, translate(t.id), t.name) : printf(" ");
+    if (DEBUG) printf(ANSI_COLOR_GREEN"[%d] %s (%s)\n"ANSI_COLOR_RESET, t.id, symbolToString(t.id), t.name);
 }
 
 void error(int e) {
@@ -683,108 +680,16 @@ void countValidTokens() {
   }
 }
 
-const char* translate(int n) {
-  switch (n)
-  {
-    case 0:
-      return "error";
-    case 1:
-      return "nulsym";
-    case 2:
-      return "identsym";
-    case 3:
-      return "numbersym";
-    case 4:
-      return "plussym";
-    case 5:
-      return "minussym";
-    case 6:
-      return "mulsym";
-    case 7:
-      return "slashsym";
-    case 8:
-      return "oddsym";
-    case 9:
-      return "eqlsym";
-    case 10:
-      return "neqsym";
-    case 11:
-      return "lessym";
-    case 12:
-      return "leqsym";
-    case 13:
-      return "gtrsym";
-    case 14:
-      return "geqsym";
-    case 15:
-      return "lparentsym";
-    case 16:
-      return "rparentsym";
-    case 17:
-      return "commasym";
-    case 18:
-      return "semicolonsym";
-    case 19:
-      return "periodsym";
-    case 20:
-      return "becomessym";
-    case 21:
-      return "beginsym";
-    case 22:
-      return "endsym";
-    case 23:
-      return "ifsym";
-    case 24:
-      return "thensym";
-    case 25:
-      return "whilesym";
-    case 26:
-      return "dosym";
-    case 27:
-      return "callsym";
-    case 28:
-      return "constsym";
-    case 29:
-      return "varsym";
-    case 30:
-      return "procsym";
-    case 31:
-      return "writesym";
-    case 32:
-      return "readsym";
-    case 33:
-      return "elsesym";
-    case 34:
-      return "errsym";
-    default:
-      return "unknownsym";
-  }
-}
-
-const char* kindToType(int n) {
-  switch(n)
-  {
-    case 1:
-      return "const";
-    case 2:
-      return "var";
-    case 3:
-      return "proc";
-    default:
-      return "";
-  }
-}
-
 void createSymbolList(){
   int c;
   FILE* ofp = fopen(PARSER_OUTPUT_SYMLIST, "w");
   // Header
-  fprintf(ofp, "%-15s\t%-15s\t%-15s\t%-15s\t%-15s\n", "Name", "Type", "Level", "Value", "Addr");
+  fprintf(ofp, "%-15s\t%-15s\t%-15s\t%-15s\n", "Name", "Type", "Level", "Value");
   for(c = 0; c < symbolCounter + 1; c++)
   {
     if (symbolList[c].kind == 0)
       continue;
-    fprintf(ofp, "%-15s\t%-15s\t%-15d\t%-15d\t%-15d\n", symbolList[c].name, kindToType(symbolList[c].kind), symbolList[c].level, symbolList[c].val, symbolList[c].addr);
+    fprintf(ofp, "%-15s\t%-15s\t%-15d\t%-15d\n", symbolList[c].name, kindToString(symbolList[c].kind), symbolList[c].level, symbolList[c].val);
   }
   fclose(ofp);
 }
@@ -809,8 +714,8 @@ int lookUp( const char* name, int level) {
       // Also, make sure it is not a procedure
       if ( symbolList[i].level == level && (strcmp(symbolList[i].name, name) == 0) && ( symbolList[i].addr != -1) )
       {
-        (DEBUG) ? printf(ANSI_COLOR_REDP"lookUp(name, level) = lookUp(%s, %d)\n"ANSI_COLOR_RESET, t.name, level) : printf(" ");
-        (DEBUG) ? printf(ANSI_COLOR_CYAN"[name, level, value, addr]: (%s, %d, %d, %d)\n"ANSI_COLOR_RESET, symbolList[i].name, symbolList[i].level, symbolList[i].val, symbolList[i].addr) : printf(" ");
+        if (DEBUG) printf(ANSI_COLOR_REDP"lookUp(name, level) = lookUp(%s, %d)\n"ANSI_COLOR_RESET, t.name, level);
+        if (DEBUG) printf(ANSI_COLOR_CYAN"[name, level, value, addr]: (%s, %d, %d, %d)\n"ANSI_COLOR_RESET, symbolList[i].name, symbolList[i].level, symbolList[i].val, symbolList[i].addr);
         return i;
       }
     }
@@ -841,8 +746,8 @@ void insertSymbol(int kind, const char* name, int val, int level, int addr) {
   symbolList[location].addr = addr;
 }
 
-/*int gen(int instruction, int l, int m) {
-  ((DEBUG) ? printf(ANSI_COLOR_YELLOW"gen(%s, %d, %d)\n"ANSI_COLOR_RESET, opTrans(instruction), l, m) : printf(" "));
+int gen(int instruction, int l, int m) {
+  if (DEBUG) printf(ANSI_COLOR_YELLOW"gen(%s, %d, %d)\n"ANSI_COLOR_RESET, instructionToString(instruction), l, m);
   asm_code[asm_line].addr = asm_line;
   asm_code[asm_line].instruction = instruction;
   asm_code[asm_line].l = l;
@@ -851,43 +756,19 @@ void insertSymbol(int kind, const char* name, int val, int level, int addr) {
   return asm_line;
 }
 
-const char* opTrans(int type) {
-  switch(type) {
-    case 1:
-      return "LIT";
-    case 2:
-      return "OPR";
-    case 3:
-      return "LOD";
-    case 4:
-      return "STO";
-    case 5:
-      return "CAL";
-    case 6:
-      return "INC";
-    case 7:
-      return "JMP";
-    case 8:
-      return "JPC";
-    case 9:
-    case 10:
-    case 11:
-      return "SIO";
-    default:
-      return "???";
-  }
-}
-
-
 void displayCodeGen() {
-   int i;
-   FILE* ofp = fopen(PARSER_OUTPUT_ASMCODE, "w");
-   printf("Number of asm_lines: %d\n", asm_line);
-   for (i = 0; i < asm_line; i++)
-   {
-     printf("%*d %s %*d %*d\n", 2, asm_code[i].addr, opTrans(asm_code[i].instruction), 3, asm_code[i].l, 3, asm_code[i].m);
-     // Why does the gen function seem to insert anything into the asm_code, but should be the symbol table?
-     fprintf(ofp, "%d %d %d\n", asm_code[i].instruction, asm_code[i].l, asm_code[i].m);
-   }
-   fclose(ofp);
- }*/
+  int i;
+  FILE* ofp = fopen(PARSER_OUTPUT_ASMCODE, "w");
+  if (DEBUG) printf("Number of asm_lines: %d\n%*s%*s%*s%*s%*s\n____________________________________________\n", asm_line, 7, "Line", 15, "Instruction", 4, "L", 5,"M", 11, "OPR Code");
+  for (i = 0; i < asm_line; i++)
+  {
+    if ( asm_code[i].instruction == 2) // if OPR
+      if (DEBUG) printf("%*d %*s %*d %*d %*s\n", 5, asm_code[i].addr, 9, instructionToString(asm_code[i].instruction), 10, asm_code[i].l, 4, asm_code[i].m, 7, operationToString(asm_code[i].m));
+    else
+      if (DEBUG) printf("%*d %*s %*d %*d\n", 5, asm_code[i].addr, 9, instructionToString(asm_code[i].instruction), 10, asm_code[i].l, 4, asm_code[i].m);
+
+    // Why does the gen function seem to insert anything into the asm_code, but should be the symbol table?
+    fprintf(ofp, "%d %d %d\n", asm_code[i].instruction, asm_code[i].l, asm_code[i].m);
+  }
+  fclose(ofp);
+}

@@ -1,8 +1,24 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+#define ANSI_COLOR_RESET         "\x1b[0m"
+#define ANSI_COLOR_BLACK         "\x1b[30m"
+#define ANSI_COLOR_DARKRED       "\x1b[31m"
+#define ANSI_COLOR_FORESTGREEN   "\x1b[32m"
+#define ANSI_COLOR_BROWN         "\x1b[33m"
+#define ANSI_COLOR_BLUE          "\x1b[34m"
+#define ANSI_COLOR_MAGENTA       "\x1b[35m"
+#define ANSI_COLOR_WHITE         "\x1b[37m"
+#define ANSI_COLOR_GRAY          "\x1b[90m"
+#define ANSI_COLOR_REDP          "\x1b[91m"
+#define ANSI_COLOR_GREEN         "\x1b[92m"
+#define ANSI_COLOR_YELLOW        "\x1b[93m"
+#define ANSI_COLOR_PURPLE        "\x1b[94m"
+#define ANSI_COLOR_PINK          "\x1b[95m"
+#define ANSI_COLOR_CYAN          "\x1b[96m"
+
 // Show debug data
-#define DEBUG 1
+#define DEBUG 0
 
 ////////////////////////////////////////////////////////////////////////////////
 // Constants
@@ -54,10 +70,13 @@
 ////////////////////////////////////////////////////////////////////////////////
   // Lexical Analyzer
     typedef enum {
-      nulsym = 1, identsym, numbersym, plussym, minussym, multsym, slashsym, oddsym,
-      eqlsym, neqsym, lessym, leqsym, gtrsym, geqsym, lparentsym, rparentsym, commasym,
-      semicolonsym, periodsym, becomessym, beginsym, endsym, ifsym, thensym, whilesym,
-      dosym, callsym, constsym, varsym, procsym, writesym, readsym, elsesym, errsym
+      nulsym = 1, identsym = 2, numbersym = 3, plussym = 4, minussym = 5,
+      multsym = 6, slashsym = 7, oddsym = 8, eqlsym = 9, neqsym = 10,
+      lessym = 11, leqsym = 12, gtrsym = 13, geqsym = 14, lparentsym = 15,
+      rparentsym = 16, commasym = 17, semicolonsym = 18, periodsym = 19,
+      becomessym = 20, beginsym = 21, endsym = 22, ifsym = 23, thensym = 24,
+      whilesym = 25, dosym = 26, callsym = 27, constsym = 28, varsym = 29,
+      procsym = 30, writesym = 31, readsym = 32, elsesym = 33, errsym = 34
     } tokenType;
     typedef struct token {
       int id;

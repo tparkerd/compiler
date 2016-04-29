@@ -1,17 +1,11 @@
 CC=gcc
-CFLAGS=
-LDFLAGS=
-SOURCES=main.c
-OBJECTS=$(SOURCES:.c=.o)
-EXECUTABLE=compiler
+all: main
 
-all: $(SOURCES) $(EXECUTABLE)
+main: main.c
+	$(CC) main.c -o compiler
 
-$(EXECUTABLE): $(OBJECTS)
-	$(CC) $(LDFLAGS) $(OBJECTS) -o $@
-
-.c.o:
-	$(CC) $(CFLAGS) $< -o $@
+run:
+	./compiler
 
 clean:
 	rm -f cleaninput.txt leemelist.txt lexemetable.txt main.o mcode.txt parseoutput.txt stacktrace.txt symlist.txt compiler

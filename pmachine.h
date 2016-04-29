@@ -15,6 +15,10 @@ void pmachine();
 void codeTrace(int operation) {
     int i;
     for(i = 0; i < codeSize; i++){
+      // If it is a OPR, display the OPR as a string
+      if ( code[i].OP == 2 )
+        fprintf(fileTrace,"%3d    %s %2d   %3d (%s)\n", i, INSTRUCTSTRINGS[code[i].OP], code[i].L, code[i].M, operationToString(code[i].M));
+      else
         fprintf(fileTrace,"%3d    %s %2d   %3d\n", i, INSTRUCTSTRINGS[code[i].OP], code[i].L, code[i].M);
     }
 }
@@ -69,6 +73,7 @@ void executeCycle(int operation){
             scanf("%d", &stack[stackPointer]);
             break;
         case 11://SIO - Halt machine
+                fprintf(fileTrace, "%s", "\nSuccessfully halted.\n");
                 fclose(fileTrace);
                 printOut(operation);
             break;
