@@ -8,4 +8,4 @@ run:
 	./compiler
 
 clean:
-	rm -f cleaninput.txt leemelist.txt lexemetable.txt main.o mcode.txt parseoutput.txt stacktrace.txt symlist.txt compiler
+	rm -f cleaninput.txt leemelist.txt lexemetable.txt main.o mcode.txt parseoutput.txt stacktrace.txt symlist.txt compiler *.out
