@@ -81,7 +81,6 @@ void block() {
 
       // Valid number found, so assign its value
       tmp.val = atoi(t.name);
-      if (DEBUG) printf(ANSI_COLOR_PURPLE"Declare(const, %s, %d, %d, %d)\n"ANSI_COLOR_RESET, tmp.name, tmp.val, 0, 0);
       insertSymbol(1, tmp.name, tmp.val, 0, 0);
 
     } while ( t.type == commasym );
@@ -108,7 +107,6 @@ void block() {
 
       // Valid id found, so assign its Name
       strcpy(tmp.name, t.name);
-      if (DEBUG) printf(ANSI_COLOR_PURPLE"declare identifier (var, %s, %d, %d, %d)\n"ANSI_COLOR_RESET, tmp.name, space, level, space);
       insertSymbol(2, tmp.name, space, level, space);
       space++;
 
@@ -138,11 +136,11 @@ void block() {
     if ( t.type != semicolonsym )
       error(5); // expected semicolon
 
-    // Set a dummy value for the offset, so we can figure it out later
-    //tmp.val = 0;
-    if (DEBUG) printf(ANSI_COLOR_REDP"declare procedure (proc, %s, %d, %d, %d)\n"ANSI_COLOR_RESET, tmp.name, asm_line, level, asm_line ) ;
     // Using asm_line as the addr may not be the best option
     insertSymbol(3, tmp.name, asm_line, level, asm_line);
+
+    // Implicit/Explicit declaration of the return value for a procedure
+    insertSymbol(2, "return", 0, level, 0);
 
     // Increase the level by one because anything after the proc was declared
     // with be at a higher level, but not including the proc itself
@@ -154,8 +152,6 @@ void block() {
 
     getNextToken();
   } // end procedure declaration
-
-  tmp.val = tmp.val + 1;
 
   // Here is where the address for JMP is changed to the correct address
   asm_code[tmpBPos].m = asm_line;
@@ -216,6 +212,7 @@ void statement() {
     getNextToken();
     expression();
 
+    // Store the value at the offset of the starting identifier
     gen(4, level - symbolList[symIndex].level, identOffset);
   }
   // If a call is found instead
@@ -227,12 +224,8 @@ void statement() {
       error(14); // identifier expected
 
     // Code gen for callsym
-    // For some reason it is looking for this symbo to see if it is declared
-    // oh, gotta check that the procedure was actually declared
-    symIndex = lookUp(t.name, level);
-
-    if (symIndex == -1)
-      error(11); // make need new error to state that the procedure is undeclared
+    if (lookUp(t.name, level) == -1)
+      error(36); // procedure undeclared
 
     getNextToken();
 
@@ -253,7 +246,6 @@ void statement() {
 
     if ( t.type != endsym )
       error(35); // expected endsym
-
     getNextToken();
   }
   else if ( t.type == ifsym )
@@ -330,15 +322,19 @@ void statement() {
     {
       symIndex = lookUp(t.name, level);
       if ( symIndex == -1 )
-        error(15);
+        error(15); // undeclared symbol
 
-      getNextToken();
+      // If it's a const, the actual value will be in its val field
       if(symbolList[symIndex].kind == 1)
         gen(1, 0, symbolList[symIndex].val);
+      // Otherwise it must be a var, so the value will need to be loaded
+      // based on its offset value (also in its val field)
       else
         gen(3, 0, symbolList[symIndex].val);
 
       gen(9, 0, 1);
+
+      getNextToken();
     }
   }
   if (DEBUG) printf(ANSI_COLOR_CYAN"exit_statement()\n"ANSI_COLOR_RESET);
@@ -418,15 +414,6 @@ void expression() {
   if (DEBUG) printf(ANSI_COLOR_CYAN"exit_expression()\n"ANSI_COLOR_RESET);
 }
 
-    // case 4:
-    //   return "plussym";
-    // case 5:
-    //   return "minussym";
-    // case 6:
-    //   return "mulsym";
-    // case 7:
-    //   return "slashsym";
-
 void term() {
   if (DEBUG) printf(ANSI_COLOR_CYAN"term()\n"ANSI_COLOR_RESET);
 
@@ -472,6 +459,27 @@ void factor() {
     getNextToken();
   }
 
+  else if ( t.type == callsym )
+  {
+    getNextToken();
+    if ( t.type != identsym )
+      error(4); // expected identifier
+
+    // Check if the identifier is actually declared & a procedure
+    symIndex = lookUp(t.name, level);
+    // We shouldn't have to worry about this being out of bounds because of shortcircuiting
+    if ( symIndex == -1 && symbolList[symIndex].kind != 3)
+      error(36); // procedure undeclared
+    else
+    {
+      // Will need to be changed for the parameter list implementation
+      gen(5, level - symbolList[symIndex].level, symbolList[symIndex].addr );
+      // recover the return value from the FV (offset zero) of the previous's activation record
+      gen(6, 0, 1);
+    }
+
+    getNextToken();
+  }
   else if ( t.type == lparentsym )
   {
     getNextToken();
@@ -628,6 +636,10 @@ void error(int e) {
       fprintf(lexemeOutput, "%s", "Expected end.");
       printf("Expected end.\n");
       break;
+    case 36:
+      fprintf(lexemeOutput, "%s", "Type error: CAL calls a undeclared procedure.");
+      printf("Type error: CAL calls a undeclared procedure.\n");
+      break;
     default:
       fprintf(lexemeOutput, "%s", "An error has occurred.\n");
       printf("An error has occurred.\n");
@@ -726,6 +738,8 @@ int lookUp( const char* name, int level) {
 
 // If the symbol does not exist yet,
 void insertSymbol(int kind, const char* name, int val, int level, int addr) {
+  if (DEBUG) printf(ANSI_COLOR_PURPLE"insertSymbol(%s, %s, %d, %d, %d)\n"ANSI_COLOR_RESET, kindToString(kind), name, level, val, addr);
+
   // Find the location in the symbol list, or find an empty slot for it
   int location = symbolCounter;
 
@@ -763,7 +777,9 @@ void displayCodeGen() {
   for (i = 0; i < asm_line; i++)
   {
     if ( asm_code[i].instruction == 2) // if OPR
+    {
       if (DEBUG) printf("%*d %*s %*d %*d %*s\n", 5, asm_code[i].addr, 9, instructionToString(asm_code[i].instruction), 10, asm_code[i].l, 4, asm_code[i].m, 7, operationToString(asm_code[i].m));
+    }
     else
       if (DEBUG) printf("%*d %*s %*d %*d\n", 5, asm_code[i].addr, 9, instructionToString(asm_code[i].instruction), 10, asm_code[i].l, 4, asm_code[i].m);
 
