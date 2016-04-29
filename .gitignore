@@ -15,4 +15,7 @@ input.txt
 symboltable.txt
 *.txt
 compiler
+<<<<<<< HEAD
 input.txt
+=======
+>>>>>>> master
