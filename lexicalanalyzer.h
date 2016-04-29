@@ -8,7 +8,7 @@ void initError();
 void initTokenStorage();
 
 // Reads raw input file, deletes comments, output lexeme data
-void read();
+void readFile();
 void readRawFile();
 void deleteComments();
 void writeLexemeTable();
@@ -38,7 +38,7 @@ int getLength(char* string);
 
 void lexicalanalyzer() {
   init();
-  read();
+  readFile();
   scan();
   writeLexemeTable();
   writeLexemeList();
@@ -230,12 +230,20 @@ void initError() {
   strcpy(isError[3].name, "Invalid symbol found");
 }
 
-void read() {
+void readFile() {
   readRawFile();
   deleteComments();
 }
 
 void readRawFile() {
+
+  // Check if input.txt exists
+  if( access( LA_INPUT, F_OK ) == -1 ) {
+    // file does not exist
+    if (DEBUG) printf(ANSI_COLOR_DARKRED"File does not exist.\n"ANSI_COLOR_RESET);
+    exit(0);
+  }
+
   // Read in contents of raw file
   FILE* ifp = fopen(LA_INPUT, "r");
   // Starting index
