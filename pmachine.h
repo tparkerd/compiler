@@ -64,7 +64,9 @@ void executeCycle(int operation){
             stackPointer--;
             break;
         case 9://SIO - Write top stack element to screen
-            printf("\nStacktrace has been written.\n");
+            // Changed: maybe it is supposed to print the TOS intead of a completion line.
+            // printf("\nStacktrace has been written.\n");
+            printf("Top of Stack: %d\n", stack[stackPointer]);
             stackPointer--;
             break;
         case 10://SIO - Read in input from user and store at top of stack
