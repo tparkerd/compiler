@@ -125,6 +125,7 @@ void block() {
   // Case: procedure declaration
   while ( t.type == procsym )
   {
+
     getNextToken();
     if ( t.type != identsym )
       error(4); // incorrect symbol after procedure
@@ -136,11 +137,14 @@ void block() {
     if ( t.type != semicolonsym )
       error(5); // expected semicolon
 
-    // Using asm_line as the addr may not be the best option
+    // Add the procedure to the symbol table
     insertSymbol(3, tmp.name, asm_line, level, asm_line);
 
     // Implicit/Explicit declaration of the return value for a procedure
-    insertSymbol(2, "return", 0, level, 0);
+    // Every procedure will have its own implicit variable ‘return’, which is
+    // inserted into the symbol table immediately after the procedure declaration
+    // has been parsed.
+    insertSymbol(2, "return", 0, level + 1, 0);
 
     // Increase the level by one because anything after the proc was declared
     // with be at a higher level, but not including the proc itself
@@ -165,8 +169,8 @@ void block() {
 
   // ###############################################################
   // ###############################################################
-  // #######                                                 #######
   // #######           I think this is where we              #######
+  // #######                                                 #######
   // #######           should place any code to              #######
   // #######           delete a symbol (local variable)      #######
   // #######           from the symbol list.                 #######
@@ -177,7 +181,6 @@ void block() {
   // ###############################################################
 
   level--;
-
   if (DEBUG) printf(ANSI_COLOR_CYAN"exit_block()\n"ANSI_COLOR_RESET);
 }
 
@@ -223,8 +226,10 @@ void statement() {
     if ( t.type != identsym )
       error(14); // identifier expected
 
+    symIndex = lookUp(t.name, level);
+
     // Code gen for callsym
-    if (lookUp(t.name, level) == -1)
+    if ( symIndex == -1)
       error(36); // procedure undeclared
 
     getNextToken();
@@ -741,12 +746,7 @@ void insertSymbol(int kind, const char* name, int val, int level, int addr) {
   if (DEBUG) printf(ANSI_COLOR_PURPLE"insertSymbol(%s, %s, %d, %d)\n"ANSI_COLOR_RESET, kindToString(kind), name, level, val);
 
   // Find the location in the symbol list, or find an empty slot for it
-  int location = symbolCounter;
-
-  // Make sure that there was an available slot for the new symbol
-  // This may need to be used to throw an error where there is a memory overflow
-  if ( location != -1 )
-    symbolCounter++;
+  int location = symbolCounter++;
 
   // If the symbol happens to be a var, we will need to increment the current M value
   // to maintain the correct JMP addresses
