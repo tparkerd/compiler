@@ -6,6 +6,8 @@ void condition();
 void expression();
 void term();
 void factor();
+void parameterBlock();
+void parameterList();
 void getNextToken();
 void error(int e);
 void readTokenList();
@@ -16,6 +18,7 @@ int lookUp(const char* name, int level);
 int gen(int instruction, int l, int m);
 void insertSymbol(int kind, const char* name, int val, int level, int addr);
 void displayCodeGen();
+
 
 
 void parser() {
@@ -59,6 +62,7 @@ void block() {
   gen(JMP, 0, 0);
   int tmpIndex;
   tmpM = 0;
+  TOS = space + TOS; // add the FV, RA, DL, and SL to the stack
   // Case: constant declaration
   if ( t.type == constsym )
   {
@@ -107,7 +111,8 @@ void block() {
 
       // Valid id found, so assign its Name
       strcpy(tmp.name, t.name);
-      insertSymbol(2, tmp.name, space, level, space);
+      insertSymbol(2, tmp.name, TOS, level, TOS);
+      TOS++; // a new symbol increases the stack
       space++;
 
       getNextToken();
@@ -133,10 +138,6 @@ void block() {
     // Valid id found, so assign its Name
     strcpy(tmp.name, t.name);
 
-    getNextToken();
-    if ( t.type != semicolonsym )
-      error(5); // expected semicolon
-
     // Add the procedure to the symbol table
     insertSymbol(3, tmp.name, asm_line, level, asm_line);
 
@@ -145,6 +146,13 @@ void block() {
     // inserted into the symbol table immediately after the procedure declaration
     // has been parsed.
     insertSymbol(2, "return", 0, level + 1, 0);
+
+    // ******** Add the parameter block ***********
+    getNextToken();
+    parameterBlock();
+
+    if ( t.type != semicolonsym )
+      error(5); // expected semicolon
 
     // Increase the level by one because anything after the proc was declared
     // with be at a higher level, but not including the proc itself
@@ -159,12 +167,18 @@ void block() {
 
   // Here is where the address for JMP is changed to the correct address
   asm_code[tmpBPos].m = asm_line;
-  gen(INC, 0, space); // INC, 0, space (reserve space)
+  gen(INC, 0, space + spTracker); // INC, 0, space (reserve space) & the number of parameters
+  stackSize = space + spTracker;
+  if (DEBUG) printf(ANSI_COLOR_DARKRED"stackSize: %d\n"ANSI_COLOR_RESET, stackSize);
   statement();
   // Only return if it is not the end of the file (so when the t.type != period)
   // a procedure end will end with a semicolon
   if (t.type == semicolonsym && t.type != periodsym)
     gen(OPR, 0, 0); // OPR, 0, 0 (return)
+
+  if (DEBUG) printf(ANSI_COLOR_DARKRED"TOS before return = %d\n"ANSI_COLOR_RESET, TOS);
+  TOS = TOS - space + spTracker;
+  if (DEBUG) printf(ANSI_COLOR_DARKRED"TOS after return = %d\n"ANSI_COLOR_RESET, TOS);
 
 
   // ###############################################################
@@ -217,6 +231,7 @@ void statement() {
 
     // Store the value at the offset of the starting identifier
     gen(STO, level - symbolList[symIndex].level, identOffset);
+    spTracker = 0;
   }
   // If a call is found instead
   else if ( t.type == callsym )
@@ -232,10 +247,14 @@ void statement() {
     if ( symIndex == -1)
       error(36); // procedure undeclared
 
-    getNextToken();
-
+    // Get the parameter list
+    // Get the opening parenthesis of the parameter list, hopefully
+    getNextToken();  //********************
+    parameterList(); //********************
     // Valid call was made, generate the code for it (what is the address though?)
     gen(CAL, level - symbolList[symIndex].level, symbolList[symIndex].addr );
+    spTracker = 0;
+
 
   }
   // If a begin is found instead of identifier or call
@@ -316,6 +335,7 @@ void statement() {
     gen(READ, 0, 2);
 
     gen(STO, 0, symbolList[symIndex].addr);
+    spTracker = 0;
   }
   // If a write is found instead of identifier or call
   else if ( t.type == writesym )
@@ -331,13 +351,17 @@ void statement() {
 
       // If it's a const, the actual value will be in its val field
       if(symbolList[symIndex].kind == 1)
+      {
         gen(LIT, 0, symbolList[symIndex].val);
+        spTracker++;
+      }
       // Otherwise it must be a var, so the value will need to be loaded
       // based on its offset value (also in its val field)
       else
         gen(LOD, 0, symbolList[symIndex].val);
 
       gen(WRITE, 0, 1);
+      spTracker = 0;
 
       getNextToken();
     }
@@ -461,6 +485,7 @@ void factor() {
   else if ( t.type == numbersym )
   {
   	gen(LIT, 0, atoi(t.name));
+    spTracker++;  // Increment the offset for each number added to the stack
     getNextToken();
   }
 
@@ -475,14 +500,18 @@ void factor() {
     // We shouldn't have to worry about this being out of bounds because of shortcircuiting
     if ( symIndex == -1 && symbolList[symIndex].kind != 3)
       error(36); // procedure undeclared
-    else
-    {
-      // Will need to be changed for the parameter list implementation
-      gen(CAL, level - symbolList[symIndex].level, symbolList[symIndex].addr );
-      // recover the return value from the FV (offset zero) of the previous's activation record
-      gen(INC, 0, 1);
-    }
 
+    // Get the parameter list
+    // Get the opening parenthesis of the parameter list, hopefully
+    getNextToken();  //********************
+    parameterList(); //********************
+    // Will need to be changed for the parameter list implementation
+    gen(CAL, level - symbolList[symIndex].level, symbolList[symIndex].addr );
+    spTracker = 0;
+    // recover the return value from the FV (offset zero) of the previous's activation record
+    gen(INC, 0, 1);
+    stackSize++;
+    spTracker++; //  increment the SP for each new thing added to the stack
     getNextToken();
   }
   else if ( t.type == lparentsym )
@@ -497,7 +526,66 @@ void factor() {
   else
     error(27); // expected id, num, or opening parenthesis
 
+
   if (DEBUG) printf(ANSI_COLOR_CYAN"exit_factor()\n"ANSI_COLOR_RESET);
+}
+
+void parameterBlock() {
+  if ( t.type != lparentsym )
+    error(37); // expected opening parenthesis
+
+    getNextToken();
+
+    if ( t.type == identsym )
+    {
+      // Add parameter to symbol table
+      insertSymbol(2, t.name, asm_line, level + 1, asm_line);
+      spTracker++;
+
+      getNextToken();
+
+      while ( t.type == commasym )
+      {
+        getNextToken();
+        if ( t.type != identsym )
+          error(38); // expected parameter list to contain only identifiers
+          // Add parameter to symbol table
+          insertSymbol(2, t.name, asm_line, level + 1, asm_line + spTracker);
+          spTracker++;
+          getNextToken();
+      }
+    }
+    if ( t.type != rparentsym )
+      error(39); // missing closing parenthesis on procedure declaration
+    getNextToken();
+}
+
+void parameterList() {
+  if ( t.type != lparentsym )
+    error(40); // missing parameter list at call
+
+  int parameterCount = 0;
+
+  getNextToken();
+  expression();
+  gen(STO, level, parameterCount + 4 + TOS);
+  parameterCount++;
+  // generate code to store expression's result into first parameter slot
+
+  while ( t.type == commasym )
+  {
+    getNextToken();
+    expression();
+    gen(STO, level, parameterCount + 4 + TOS);
+    parameterCount++;
+    // generate code to store expression's result into first parameter slot
+
+  }
+
+  if ( t.type != rparentsym )
+    error(41); // bad calling format
+
+  getNextToken();
 }
 
 void getNextToken() {
@@ -644,6 +732,26 @@ void error(int e) {
     case 36:
       fprintf(lexemeOutput, "%s", "Type error: CAL calls a undeclared procedure.");
       printf("Type error: CAL calls a undeclared procedure.\n");
+      break;
+    case 37:
+      fprintf(lexemeOutput, "%s", "Procedure must have parameters.");
+      printf("Procedure must have parameters.\n");
+      break;
+    case 38:
+      fprintf(lexemeOutput, "%s", "Expected identifier (parameter).");
+      printf("Expected identifier (parameter).\n");
+      break;
+    case 39:
+      fprintf(lexemeOutput, "%s", "Closing parenthesis is missing from parameter list on procedure declaration.");
+      printf("Closing parenthesis is missing from parameter list on procedure declaration.\n");
+      break;
+    case 40:
+      fprintf(lexemeOutput, "%s", "Missing parameter list at call.");
+      printf("Missing parameter list at call.\n");
+      break;
+    case 41:
+      fprintf(lexemeOutput, "%s", "Bad calling format.");
+      printf("Bad calling format.\n");
       break;
     default:
       fprintf(lexemeOutput, "%s", "An error has occurred.\n");

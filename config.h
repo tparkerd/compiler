@@ -135,6 +135,10 @@
     int NEXT_CODE_ADDR;
     int symbolCounter = 0;
     int tmpM = 0;
+    int spTracker = 0; // Keeps track of the SP to implement parameters
+    int stackSize = 0;
+    int lastSP = 0;
+    int TOS = 0;
   // VM
     int codeSize = 0;
     int basePointer = 1;
