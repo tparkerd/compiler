@@ -18,7 +18,7 @@
 #define ANSI_COLOR_CYAN          "\x1b[96m"
 
 // Show debug data
-#define DEBUG 1
+#define DEBUG 0
 
 ////////////////////////////////////////////////////////////////////////////////
 // Constants
